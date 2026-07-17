@@ -150,7 +150,10 @@ hr{border:none;border-top:1px solid var(--border);margin:14px 0}
   <div class="card" id="summary-card"></div>
   <div id="slots"></div>
   <div class="card" id="water-card"></div>
-  <button class="btn full" onclick="syncHealth()">⌘ Sync to Apple Health</button>
+  <div style="display:flex;gap:8px">
+    <button class="btn full" onclick="importHealth()">⬇︎ Import from Health</button>
+    <button class="btn full" onclick="syncHealth()">⬆︎ Export to Health</button>
+  </div>
 </div>
 
 <!-- ============ TRENDS ============ -->

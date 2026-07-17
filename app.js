@@ -134,7 +134,11 @@ function targets(){
   if(!p) return null;
   const w = latestWeight();
   let bmr = 10*w + 6.25*p.heightCm - 5*p.age + (p.gender==="male" ? 5 : -161);
-  const tdee = bmr * p.activity;
+  let tdee = bmr * p.activity;
+  // Health-driven mode: real measured active energy instead of activity multiplier
+  const hd = (D.days[todayKey()]||{}).health;
+  if(p.useHealthEnergy && hd && hd.activeKcal!=null)
+    tdee = bmr*1.25 + hd.activeKcal;   // 1.25 ≈ sedentary baseline (NEAT/TEF), + measured activity
   const now = fromKey(todayKey()), end = fromKey(p.targetDate);
   const daysLeft = Math.max(7,(end-now)/864e5);
   let rate = (p.targetWeight - w)/(daysLeft/7);          // kg per week
@@ -157,9 +161,10 @@ function waterTarget(k){
   let caf=0;
   const d=D.days[k||viewDate];
   if(d) for(const s in d.meals) for(const it of d.meals[s].items) if(it.caf) caf+=it.caf;
-  const bonus = Math.ceil(caf*200/250);
+  const act = (d&&d.health&&d.health.activeKcal) ? Math.floor(d.health.activeKcal/500) : 0;
+  const bonus = Math.ceil(caf*200/250) + act;
   const base = Math.ceil(baseMl/250);
-  return { glasses:base+bonus, base, bonus };
+  return { glasses:base+bonus, base, bonus, cafBonus:Math.ceil(caf*200/250), actBonus:act };
 }
 function dayTotals(k){
   const d=D.days[k]; const t={kcal:0,p:0,c:0,f:0,fb:0,sg:0,caf:0,logged:false};
@@ -217,6 +222,10 @@ function renderToday(){
     }
     html+=`<div class="stat-row muted"><span>Fiber ${r1(tot.fb)} g · Sugar ${r1(tot.sg)} g</span>
            <span>${T.kcal-Math.round(tot.kcal)} kcal left</span></div>`;
+    const hd=day(viewDate).health;
+    if(hd) html+=`<div class="stat-row muted" style="margin-top:6px">
+      <span>❤️ Health: ${hd.steps!=null?hd.steps.toLocaleString()+" steps":""}${hd.activeKcal!=null?" · 🔥 "+Math.round(hd.activeKcal)+" active kcal":""}</span>
+      <span>${D.profile.useHealthEnergy?"driving targets":""}</span></div>`;
   }
   $("summary-card").innerHTML=html;
 
@@ -260,7 +269,7 @@ function renderToday(){
   $("water-card").innerHTML=`
     <div class="stat-row"><span>💧 Water</span>
     <b>${(drank*0.25).toFixed(2)} / ${(wt.glasses*0.25).toFixed(2)} L</b></div>
-    <div class="muted">${wt.bonus?`+${wt.bonus} glass${wt.bonus>1?"es":""} added for caffeine today`:"Base target from your weight"}</div>
+    <div class="muted">${wt.bonus?[wt.cafBonus?`+${wt.cafBonus} for caffeine`:"",wt.actBonus?`+${wt.actBonus} for activity`:""].filter(Boolean).join(" · "):"Base target from your weight"}</div>
     <div class="water-glasses">${wg}</div>`;
 }
 function toggleSlot(key){ $("slot-"+key).classList.toggle("open"); }
@@ -526,6 +535,9 @@ function renderProfile(){
         <option value="1.4" ${p.activity==1.4?"selected":""}>Light (1–3 workouts/wk)</option>
         <option value="1.55" ${p.activity==1.55?"selected":""}>Moderate (3–5 workouts/wk)</option>
         <option value="1.7" ${p.activity==1.7?"selected":""}>Active (6–7 workouts/wk)</option></select>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:14px;color:var(--text)">
+        <input type="checkbox" id="pf-health" style="width:auto" ${p.useHealthEnergy?"checked":""}>
+        Use Apple Health active energy for calorie targets (import daily; ignores activity level)</label>
       <button class="btn primary full" style="margin-top:14px" onclick="saveProfile()">Save profile</button>
     </div>
     <div class="card">
@@ -542,6 +554,7 @@ function saveProfile(){
     heightCm:+$("pf-height").value, startWeight:+$("pf-weight").value,
     targetWeight:+$("pf-target").value, targetDate:$("pf-tdate").value,
     activity:+$("pf-activity").value,
+    useHealthEnergy:$("pf-health").checked,
     startDate:(D.profile&&D.profile.startDate)||todayKey() };
   if(first && !D.weights.length) D.weights.push({date:todayKey(),kg:D.profile.startWeight});
   save(); toast("Profile saved ✓"); go("today");
@@ -624,6 +637,44 @@ $("chat-text")?.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendChat(); }});
 
 /* ---------- Apple Health via Shortcuts ---------- */
+function applyHealthData(h){
+  const k = h.date || todayKey();
+  const d = day(k);
+  d.health = d.health || {};
+  if(h.steps!=null)      d.health.steps = Math.round(+h.steps);
+  if(h.activeKcal!=null) d.health.activeKcal = Math.round(+h.activeKcal);
+  let msg=[];
+  if(h.weightKg!=null && +h.weightKg>20){
+    const kg=r1(+h.weightKg);
+    const ex=D.weights.find(w=>w.date===k);
+    if(ex) ex.kg=kg; else D.weights.push({date:k,kg});
+    D.weights.sort((a,b)=>a.date<b.date?-1:1);
+    msg.push(kg+" kg");
+  }
+  if(d.health.steps!=null) msg.push(d.health.steps.toLocaleString()+" steps");
+  if(d.health.activeKcal!=null) msg.push(d.health.activeKcal+" active kcal");
+  save(); renderToday();
+  toast(msg.length?("Imported: "+msg.join(", ")+" ✓"):"Nothing to import");
+}
+async function importHealth(){
+  // Data arrives from the "Fuel Import" iPhone Shortcut via clipboard (or #h= URL hash)
+  try{
+    const txt = await navigator.clipboard.readText();
+    const h = JSON.parse(txt);
+    if(typeof h!=="object") throw 0;
+    applyHealthData(h);
+  }catch(e){
+    toast("Run the 'Fuel Import' Shortcut first (see README)");
+  }
+}
+// alternative path: Shortcut opens fuel/#h=<urlencoded json>
+(function(){
+  if(location.hash.startsWith("#h=")){
+    try{ applyHealthData(JSON.parse(decodeURIComponent(location.hash.slice(3)))); }catch(e){}
+    history.replaceState(null,"",location.pathname);
+  }
+})();
+
 function syncHealth(){
   const tot=dayTotals(viewDate), d=day(viewDate);
   const w=D.weights.find(x=>x.date===viewDate);

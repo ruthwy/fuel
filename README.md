@@ -27,9 +27,30 @@ Profile tab opens automatically → enter gender, age, height, weight, target we
 - **Foods**: edit your default meal plan and the food database (add any food with its macros).
 - **Coach**: paste an Anthropic API key (console.anthropic.com → API keys). The bot sees your targets, today's intake, remaining macros, and your meal plan — ask it for meal-prep ideas, swaps, "what should I eat tonight", etc.
 
-## Apple Health sync (via Shortcuts)
+## Apple Health — reading data INTO the app (via Shortcuts)
 
-The **Sync to Apple Health** button copies today's numbers as JSON and runs an iPhone Shortcut named **Fuel Sync**. Build it once:
+Web apps can't access HealthKit directly, so an iPhone Shortcut named **Fuel Import** reads Health and hands the data over. Build it once:
+
+1. **Shortcuts** app → **+** → rename it exactly `Fuel Import`.
+2. Add actions in this order:
+   1. **Find Health Samples** → type *Weight*, sorted by Start Date, Latest First, Limit 1
+   2. **Set Variable** → name `w`
+   3. **Find Health Samples** → type *Steps*, where Start Date *is today* → then **Calculate Statistics** → Sum → **Set Variable** `s`
+   4. **Find Health Samples** → type *Active Energy*, where Start Date *is today* → **Calculate Statistics** → Sum → **Set Variable** `a`
+   5. **Text** action containing exactly: `{"weightKg": w, "steps": s, "activeKcal": a}` (insert the variables where the letters are)
+   6. **Copy to Clipboard**
+   7. **Open URLs** → `https://ruthwy.github.io/fuel/`
+3. Run it → app opens → tap **⬇︎ Import from Health** → allow the paste prompt.
+
+The app then: auto-logs your weight, shows steps + active burn on Today, and adds extra water glasses on high-activity days (+1 per 500 active kcal).
+
+**Optional — Health-driven calorie targets:** in Profile, enable *"Use Apple Health active energy for calorie targets"*. Your daily calorie budget is then computed from your real measured activity (BMR × 1.25 + active energy) instead of a fixed activity multiplier. Import daily if you use this.
+
+Tip: add the Shortcut to your home screen or an automation (e.g. run every morning) so importing is one tap.
+
+## Apple Health — writing data out (optional)
+
+The **⬆︎ Export to Health** button copies today's numbers as JSON and runs a Shortcut named **Fuel Sync**. Build it once:
 
 1. Open **Shortcuts** app → **+** new shortcut → rename it exactly `Fuel Sync`.
 2. Add actions in this order:
