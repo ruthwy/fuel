@@ -708,17 +708,16 @@ async function sendChat(){
   const log=$("chatlog");
   log.insertAdjacentHTML("beforeend",`<div class="msg ai" id="pending">…</div>`);
   try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{
+    const res=await fetch("https://api.openai.com/v1/chat/completions",{
       method:"POST",
       headers:{ "content-type":"application/json",
-        "x-api-key":D.apiKey, "anthropic-version":"2023-06-01",
-        "anthropic-dangerous-direct-browser-access":"true" },
-      body:JSON.stringify({ model:"claude-sonnet-4-5", max_tokens:700,
-        system:coachContext(),
-        messages:D.chat.slice(-12).map(m=>({role:m.role,content:m.content})) })
+        "authorization":"Bearer "+D.apiKey },
+      body:JSON.stringify({ model:"gpt-4o-mini", max_tokens:700,
+        messages:[{role:"system",content:coachContext()},
+          ...D.chat.slice(-12).map(m=>({role:m.role,content:m.content}))] })
     });
     const j=await res.json();
-    const reply=j.content&&j.content[0]?j.content[0].text:(j.error?`Error: ${j.error.message}`:"No reply");
+    const reply=j.choices&&j.choices[0]?j.choices[0].message.content:(j.error?`Error: ${j.error.message}`:"No reply");
     D.chat.push({role:"assistant",content:reply});
     if(D.chat.length>40) D.chat=D.chat.slice(-40);
     save();

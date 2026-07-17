@@ -1,4 +1,4 @@
-const CACHE = "fuel-v3";
+const CACHE = "fuel-v4";
 const ASSETS = ["./", "./index.html", "./app.js", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -9,7 +9,7 @@ self.addEventListener("activate", e => {
     Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener("fetch", e => {
-  if (e.request.url.includes("api.anthropic.com")) return; // never cache API calls
+  if (e.request.url.includes("api.openai.com")) return; // never cache API calls
   e.respondWith(
     fetch(e.request).then(r => {
       const copy = r.clone();

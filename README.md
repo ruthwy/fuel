@@ -25,7 +25,7 @@ Profile tab opens automatically → enter gender, age, height, weight, target we
 - Color dots: 🟢 good (protein/fiber dense) · 🟡 neutral · 🔴 limit (sugary / fatty-low-protein).
 - **Trends**: log weight (2–3×/week is enough). Chart shows actual vs the target path; status tells you if you're on track. Calorie/protein bars for last 14 days.
 - **Foods**: edit your default meal plan and the food database (add any food with its macros).
-- **Coach**: paste an Anthropic API key (console.anthropic.com → API keys). The bot sees your targets, today's intake, remaining macros, and your meal plan — ask it for meal-prep ideas, swaps, "what should I eat tonight", etc.
+- **Coach**: paste an OpenAI API key (platform.openai.com → API keys) in the Coach tab. The key stays on your device only — never commit it to this repo (it's public; exposed keys get auto-revoked). The bot sees your targets, today's intake, remaining macros, and today's meal plan — ask it for meal-prep ideas, swaps, "what should I eat tonight", etc.
 
 ## Apple Health — reading data INTO the app (via Shortcuts)
 
