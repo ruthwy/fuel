@@ -20,7 +20,7 @@ const UNITS = { g:"g", pc:"piece", cup:"cup", tbsp:"tbsp", tsp:"tsp", scoop:"sco
 const STARTER_FOODS = [
  {id:"rice",    name:"White rice",            unit:"g", basis:"cooked", kcal:130,p:2.7,c:28,f:0.3,fb:0.4,sg:0},
  {id:"brice",   name:"Brown rice",            unit:"g", basis:"cooked", kcal:112,p:2.3,c:24,f:0.8,fb:1.8,sg:0},
- {id:"roti",    name:"Roti / chapati",        unit:"pc",basis:"",       kcal:104,p:3.1,c:18,f:2.4,fb:2,sg:0},
+ {id:"roti",    name:"Roti / chapati (40g)",  unit:"pc",basis:"",       kcal:120,p:3,c:18,f:3.5,fb:2,sg:0},
  {id:"dosa",    name:"Dosa",                  unit:"pc",basis:"",       kcal:133,p:2.6,c:18,f:5.5,fb:0.9,sg:0},
  {id:"idli",    name:"Idli",                  unit:"pc",basis:"",       kcal:58,p:2,c:12,f:0.4,fb:0.6,sg:0},
  {id:"poha",    name:"Poha (dry flakes)",     unit:"g", basis:"raw",    kcal:360,p:6.6,c:78,f:1.2,fb:2,sg:0},
@@ -31,21 +31,27 @@ const STARTER_FOODS = [
  {id:"moong",   name:"Moong dal (dry)",       unit:"g", basis:"raw",    kcal:347,p:24,c:63,f:1.2,fb:16,sg:0},
  {id:"chana",   name:"Chana / chickpea (dry)",unit:"g", basis:"raw",    kcal:364,p:19,c:61,f:6,fb:17,sg:0},
  {id:"rajma",   name:"Rajma (dry)",           unit:"g", basis:"raw",    kcal:333,p:24,c:60,f:0.8,fb:25,sg:0},
- {id:"chbr",    name:"Chicken breast",        unit:"g", basis:"raw",    kcal:120,p:22.5,c:0,f:2.6,fb:0,sg:0},
+ {id:"chbr",    name:"Chicken breast (raw)",  unit:"g", basis:"raw",    kcal:120,p:22.5,c:0,f:2.6,fb:0,sg:0},
+ {id:"chbrc",   name:"Chicken breast (cooked)",unit:"g",basis:"cooked", kcal:165,p:31,c:0,f:3.6,fb:0,sg:0},
+ {id:"moongc",  name:"Moong dal (cooked)",    unit:"g", basis:"cooked", kcal:116,p:8,c:16,f:0.4,fb:3,sg:0},
+ {id:"soy",     name:"Soy chunks (dry)",      unit:"g", basis:"raw",    kcal:345,p:52,c:33,f:0.5,fb:13,sg:0},
+ {id:"toast",   name:"Whole wheat toast",     unit:"pc",basis:"",       kcal:66,p:2,c:11,f:1,fb:1.5,sg:1},
+ {id:"mvego",   name:"Mixed veg + 1 tsp oil", unit:"g", basis:"cooked", kcal:85,p:2,c:8,f:4.5,fb:2.5,sg:2},
+ {id:"mveg",    name:"Mixed vegetables (plain)",unit:"g",basis:"cooked",kcal:40,p:2,c:6,f:0.5,fb:2.5,sg:2},
  {id:"chcur",   name:"Chicken curry",         unit:"g", basis:"cooked", kcal:150,p:14,c:4,f:8,fb:0.5,sg:1},
  {id:"egg",     name:"Egg (whole)",           unit:"pc",basis:"",       kcal:72,p:6.3,c:0.4,f:4.8,fb:0,sg:0},
  {id:"eggw",    name:"Egg white",             unit:"pc",basis:"",       kcal:17,p:3.6,c:0.2,f:0.1,fb:0,sg:0},
  {id:"fish",    name:"Fish (rohu/tilapia)",   unit:"g", basis:"raw",    kcal:96,p:20,c:0,f:1.7,fb:0,sg:0},
- {id:"paneer",  name:"Paneer",                unit:"g", basis:"raw",    kcal:296,p:18,c:4,f:23,fb:0,sg:2},
+ {id:"paneer",  name:"Paneer",                unit:"g", basis:"raw",    kcal:265,p:18,c:3.5,f:20,fb:0,sg:2},
  {id:"curd",    name:"Curd / dahi",           unit:"g", basis:"raw",    kcal:60,p:3.5,c:4.7,f:3.3,fb:0,sg:4.7},
- {id:"milk",    name:"Milk (toned, 1 cup)",   unit:"cup",basis:"",      kcal:122,p:8,c:12,f:4.8,fb:0,sg:12},
- {id:"whey",    name:"Whey protein",          unit:"scoop",basis:"",    kcal:120,p:24,c:3,f:1.5,fb:0,sg:2},
+ {id:"milk",    name:"Milk (toned, 200ml)",   unit:"cup",basis:"",      kcal:116,p:6.4,c:9.6,f:4.2,fb:0,sg:9.6},
+ {id:"whey",    name:"Whey protein",          unit:"g", basis:"raw",    kcal:400,p:80,c:10,f:5,fb:0,sg:6},
  {id:"pnut",    name:"Peanuts",               unit:"g", basis:"raw",    kcal:567,p:26,c:16,f:49,fb:8.5,sg:4},
  {id:"almond",  name:"Almonds",               unit:"g", basis:"raw",    kcal:579,p:21,c:22,f:50,fb:12.5,sg:4},
  {id:"pb",      name:"Peanut butter",         unit:"tbsp",basis:"",     kcal:94,p:4,c:3,f:8,fb:0.8,sg:1.5},
  {id:"ghee",    name:"Ghee",                  unit:"tsp",basis:"",      kcal:45,p:0,c:0,f:5,fb:0,sg:0},
- {id:"banana",  name:"Banana",                unit:"pc",basis:"",       kcal:105,p:1.3,c:27,f:0.4,fb:3,sg:14},
- {id:"apple",   name:"Apple",                 unit:"pc",basis:"",       kcal:95,p:0.5,c:25,f:0.3,fb:4,sg:19},
+ {id:"banana",  name:"Banana",                unit:"g", basis:"raw",    kcal:89,p:1.1,c:23,f:0.3,fb:2.6,sg:12},
+ {id:"apple",   name:"Apple",                 unit:"g", basis:"raw",    kcal:52,p:0.3,c:14,f:0.2,fb:2.4,sg:10},
  {id:"sabzi",   name:"Vegetable sabzi",       unit:"g", basis:"cooked", kcal:80,p:2,c:8,f:4,fb:2.5,sg:2},
  {id:"sambar",  name:"Sambar",                unit:"g", basis:"cooked", kcal:55,p:2.5,c:8,f:1.5,fb:1.5,sg:1},
  {id:"salad",   name:"Salad (raw veg)",       unit:"g", basis:"raw",    kcal:25,p:1,c:5,f:0.2,fb:2,sg:2},
@@ -58,14 +64,37 @@ const STARTER_FOODS = [
  {id:"biscuit", name:"Biscuit (marie)",       unit:"pc",basis:"",       kcal:28,p:0.4,c:4.5,f:0.9,fb:0.1,sg:1.5},
 ];
 
-const STARTER_PLAN = {
-  pre:   [{foodId:"bcoffee",qty:1}],
-  bf:    [{foodId:"oats",qty:50},{foodId:"milk",qty:1},{foodId:"banana",qty:1}],
-  mid:   [{foodId:"egg",qty:2},{foodId:"gtea",qty:1}],
-  lunch: [{foodId:"rice",qty:200},{foodId:"toor",qty:40},{foodId:"sabzi",qty:150},{foodId:"curd",qty:100}],
-  eve:   [{foodId:"pnut",qty:30},{foodId:"tea",qty:1}],
-  night: [{foodId:"roti",qty:2},{foodId:"chcur",qty:150},{foodId:"salad",qty:100}],
-};
+/* days: JS weekday numbers (0=Sun … 6=Sat) */
+function DEFAULT_PLANS(){ return JSON.parse(JSON.stringify([
+ { id:"nvrest", name:"Non-veg · Rest", days:[5,0],
+   slots:{ pre:[],
+     bf:[{foodId:"egg",qty:3},{foodId:"eggw",qty:1},{foodId:"toast",qty:1}],
+     mid:[{foodId:"whey",qty:30},{foodId:"almond",qty:10}],
+     lunch:[{foodId:"chbrc",qty:120},{foodId:"brice",qty:90},{foodId:"moongc",qty:100},{foodId:"mvego",qty:100},{foodId:"roti",qty:1}],
+     eve:[{foodId:"curd",qty:150},{foodId:"apple",qty:100}],
+     night:[{foodId:"chbrc",qty:100},{foodId:"roti",qty:1},{foodId:"mveg",qty:150}] } },
+ { id:"vwork", name:"Veg · Workout", days:[1],
+   slots:{ pre:[],
+     bf:[{foodId:"whey",qty:30},{foodId:"milk",qty:1},{foodId:"banana",qty:100}],
+     mid:[{foodId:"whey",qty:20},{foodId:"toast",qty:1}],
+     lunch:[{foodId:"soy",qty:70},{foodId:"moongc",qty:150},{foodId:"brice",qty:100},{foodId:"mvego",qty:100}],
+     eve:[{foodId:"curd",qty:150},{foodId:"apple",qty:100},{foodId:"whey",qty:15}],
+     night:[{foodId:"paneer",qty:60},{foodId:"roti",qty:1},{foodId:"mveg",qty:100}] } },
+ { id:"nvwork", name:"Non-veg · Workout", days:[3,4],
+   slots:{ pre:[],
+     bf:[{foodId:"egg",qty:3},{foodId:"eggw",qty:2},{foodId:"toast",qty:1}],
+     mid:[{foodId:"whey",qty:30},{foodId:"banana",qty:100}],
+     lunch:[{foodId:"chbrc",qty:130},{foodId:"brice",qty:130},{foodId:"moongc",qty:100},{foodId:"mvego",qty:100}],
+     eve:[{foodId:"curd",qty:150},{foodId:"almond",qty:15}],
+     night:[{foodId:"chbrc",qty:100},{foodId:"roti",qty:1},{foodId:"mveg",qty:150}] } },
+ { id:"vrest", name:"Veg · Rest", days:[2,6],
+   slots:{ pre:[],
+     bf:[{foodId:"whey",qty:30},{foodId:"milk",qty:1},{foodId:"banana",qty:80}],
+     mid:[{foodId:"toast",qty:1},{foodId:"pb",qty:1}],
+     lunch:[{foodId:"soy",qty:60},{foodId:"moongc",qty:150},{foodId:"brice",qty:80},{foodId:"mvego",qty:100}],
+     eve:[{foodId:"curd",qty:150},{foodId:"apple",qty:100},{foodId:"whey",qty:15}],
+     night:[{foodId:"paneer",qty:60},{foodId:"roti",qty:1},{foodId:"mveg",qty:100}] } },
+])); }
 
 /* ---------- state ---------- */
 let D = load();
@@ -73,13 +102,27 @@ let viewDate = todayKey();
 let pickCtx = null;   // {target:'slot'|'plan', slot}
 let pickedFood = null;
 
+function migrate(d){
+  if(!d.v || d.v < 2){
+    const custom=(d.foods||[]).filter(f=>String(f.id).startsWith("c"));
+    d.foods=STARTER_FOODS.slice().concat(custom);
+    d.plans=DEFAULT_PLANS();
+    delete d.plan;
+    d.v=2;
+  }
+  return d;
+}
 function load(){
   try{
     const raw = localStorage.getItem("ft_data");
-    if(raw){ const d = JSON.parse(raw); if(!d.foods) d.foods = STARTER_FOODS; return d; }
+    if(raw) return migrate(JSON.parse(raw));
   }catch(e){}
-  return { profile:null, weights:[], foods:STARTER_FOODS.slice(),
-           plan:JSON.parse(JSON.stringify(STARTER_PLAN)), days:{}, chat:[], apiKey:"" };
+  return { v:2, profile:null, weights:[], foods:STARTER_FOODS.slice(),
+           plans:DEFAULT_PLANS(), days:{}, chat:[], apiKey:"" };
+}
+function planForDate(k){
+  const wd=fromKey(k||viewDate).getDay();
+  return D.plans.find(p=>(p.days||[]).includes(wd)) || D.plans[0];
 }
 function save(){ localStorage.setItem("ft_data", JSON.stringify(D)); }
 
@@ -230,7 +273,7 @@ function renderToday(){
   $("summary-card").innerHTML=html;
 
   // slots
-  let sh="";
+  let sh=`<div class="muted" style="margin:2px 2px 8px">📋 Today's plan: <b style="color:var(--text)">${planForDate(viewDate).name}</b></div>`;
   for(const s of SLOTS){
     const sd=slotData(viewDate,s.key);
     const kcal=sd.items.reduce((a,i)=>a+i.kcal,0);
@@ -245,7 +288,7 @@ function renderToday(){
         <span class="i-macro">${it.kcal} kcal · ${it.p}g P</span>
         <button class="del" onclick="delItem(event,'${s.key}',${i})">✕</button></div>`;
     }
-    const hasPlan=(D.plan[s.key]||[]).length>0;
+    const hasPlan=((planForDate(viewDate).slots||{})[s.key]||[]).length>0;
     sh+=`<div class="slot" id="slot-${s.key}">
       <div class="slot-head" onclick="toggleSlot('${s.key}')">
         ${check}<span class="s-name">${s.name}</span>
@@ -279,12 +322,13 @@ function delItem(ev,slot,idx){ ev.stopPropagation();
   slotData(viewDate,slot).items.splice(idx,1); save(); renderToday(); keepOpen(slot); }
 function usePlan(slot){
   const sd=slotData(viewDate,slot);
-  for(const pi of (D.plan[slot]||[])){
+  for(const pi of ((planForDate(viewDate).slots||{})[slot]||[])){
     const f=food(pi.foodId); if(!f) continue;
     const m=itemMacros(f,pi.qty);
     sd.items.push({foodId:f.id,name:f.name,qty:pi.qty,unit:f.unit,grade:gradeOf(f),...m});
   }
-  sd.skipped=false; save(); renderToday(); keepOpen(slot); toast("Plan logged ✓");
+  sd.skipped=false; save(); renderToday(); keepOpen(slot);
+  toast(planForDate(viewDate).name+" plan logged ✓");
 }
 function tapGlass(i){
   const d=day(viewDate);
@@ -293,8 +337,8 @@ function tapGlass(i){
 }
 
 /* ---------- food picker ---------- */
-function openPicker(target,slot){
-  pickCtx={target,slot}; pickedFood=null;
+function openPicker(target,slot,planId){
+  pickCtx={target,slot,planId}; pickedFood=null;
   $("food-search").value=""; $("qty-section").style.display="none";
   $("food-modal-title").textContent = target==="plan" ? "Add to plan — "+SLOTS.find(s=>s.key===slot).name
                                                       : "Add food — "+SLOTS.find(s=>s.key===slot).name;
@@ -327,9 +371,10 @@ function confirmAddFood(){
   const q=parseFloat($("qty-input").value);
   if(!pickedFood||!q||q<=0) return;
   if(pickCtx.target==="plan"){
-    if(!D.plan[pickCtx.slot]) D.plan[pickCtx.slot]=[];
-    D.plan[pickCtx.slot].push({foodId:pickedFood.id,qty:q});
-    save(); closeModal("food-modal"); renderPlan(); toast("Added to plan");
+    const pl=D.plans.find(p=>p.id===pickCtx.planId);
+    if(!pl.slots[pickCtx.slot]) pl.slots[pickCtx.slot]=[];
+    pl.slots[pickCtx.slot].push({foodId:pickedFood.id,qty:q});
+    save(); closeModal("food-modal"); renderPlan(); toast("Added to "+pl.name);
   }else{
     const m=itemMacros(pickedFood,q);
     slotData(viewDate,pickCtx.slot).items.push(
@@ -435,10 +480,35 @@ function foodsTab(which){
   $("plan-editor").style.display=which==="plan"?"block":"none";
   $("db-editor").style.display=which==="db"?"block":"none";
 }
+let selPlanId=null;
+const WD=["Su","Mo","Tu","We","Th","Fr","Sa"];
+function selPlan(){ return D.plans.find(p=>p.id===selPlanId)||D.plans[0]; }
 function renderPlan(){
-  let html="<p class='muted' style='margin:0 0 10px'>Your default day. 'Use plan' on the Today tab logs these in one tap. Edit freely.</p>";
+  if(!selPlanId||!D.plans.find(p=>p.id===selPlanId)) selPlanId=D.plans[0].id;
+  const pl=selPlan();
+  // plan tabs
+  let html=`<div class="pill-row">`+
+    D.plans.map(p=>`<button class="pill ${p.id===pl.id?"active":""}" onclick="switchPlan('${p.id}')">${p.name}</button>`).join("")+
+    `<button class="pill" onclick="addPlan()">＋ New</button></div>`;
+  // totals
+  let tk=0,tp=0;
+  for(const s of SLOTS) for(const pi of (pl.slots[s.key]||[])){
+    const f=food(pi.foodId); if(!f) continue;
+    const m=itemMacros(f,pi.qty); tk+=m.kcal; tp+=m.p;
+  }
+  // name + day assignment
+  html+=`<div class="card">
+    <label>Plan name</label><input value="${pl.name}" onchange="renamePlan(this.value)">
+    <label>Days this plan applies (tap to toggle — a day moves here from its old plan)</label>
+    <div style="display:flex;gap:6px;margin-top:4px">`+
+    WD.map((w,i)=>`<button class="pill ${pl.days.includes(i)?"active":""}" style="padding:7px 0;flex:1;text-align:center" onclick="toggleDay(${i})">${w}</button>`).join("")+
+    `</div>
+    <div class="stat-row" style="margin-top:12px"><span>Plan total</span><b>${tk} kcal · ${r1(tp)}g protein</b></div>
+    ${D.plans.length>1?`<button class="btn small warn" style="margin-top:8px" onclick="deletePlan()">Delete this plan</button>`:""}
+  </div>`;
+  // slots
   for(const s of SLOTS){
-    const items=(D.plan[s.key]||[]);
+    const items=(pl.slots[s.key]||[]);
     let rows="", kcal=0;
     items.forEach((pi,i)=>{
       const f=food(pi.foodId); if(!f) return;
@@ -450,11 +520,30 @@ function renderPlan(){
     });
     html+=`<div class="card"><div class="stat-row" style="margin-bottom:8px">
       <b>${s.name}</b><span class="muted">${kcal?kcal+" kcal":"empty (optional)"}</span></div>
-      ${rows}<button class="btn small" style="margin-top:8px" onclick="openPicker('plan','${s.key}')">+ Add</button></div>`;
+      ${rows}<button class="btn small" style="margin-top:8px" onclick="openPicker('plan','${s.key}','${pl.id}')">+ Add</button></div>`;
   }
   $("plan-editor").innerHTML=html;
 }
-function delPlanItem(slot,i){ D.plan[slot].splice(i,1); save(); renderPlan(); }
+function switchPlan(id){ selPlanId=id; renderPlan(); }
+function renamePlan(v){ if(v.trim()){ selPlan().name=v.trim(); save(); renderPlan(); } }
+function toggleDay(i){
+  const pl=selPlan();
+  if(pl.days.includes(i)) pl.days=pl.days.filter(d=>d!==i);
+  else{ for(const p of D.plans) p.days=(p.days||[]).filter(d=>d!==i); pl.days.push(i); }
+  save(); renderPlan();
+}
+function addPlan(){
+  const id="p"+Date.now();
+  D.plans.push({id, name:"New plan", days:[],
+    slots:{pre:[],bf:[],mid:[],lunch:[],eve:[],night:[]}});
+  selPlanId=id; save(); renderPlan();
+}
+function deletePlan(){
+  if(!confirm("Delete plan '"+selPlan().name+"'?")) return;
+  D.plans=D.plans.filter(p=>p.id!==selPlanId);
+  selPlanId=D.plans[0].id; save(); renderPlan();
+}
+function delPlanItem(slot,i){ selPlan().slots[slot].splice(i,1); save(); renderPlan(); }
 
 function renderDB(){
   const q=($("db-search").value||"").toLowerCase();
@@ -509,7 +598,8 @@ function saveFood(id){
 }
 function deleteFood(id){
   D.foods=D.foods.filter(f=>f.id!==id);
-  for(const s in D.plan) D.plan[s]=D.plan[s].filter(pi=>pi.foodId!==id);
+  for(const pl of D.plans) for(const s in pl.slots)
+    pl.slots[s]=pl.slots[s].filter(pi=>pi.foodId!==id);
   save(); closeModal("editfood-modal"); renderDB(); renderPlan();
 }
 
@@ -593,10 +683,12 @@ function coachContext(){
   for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i);
     const k=todayKey(d), t=dayTotals(k);
     if(t.logged) last7.push(`${k}: ${Math.round(t.kcal)} kcal, ${t.p}g P`); }
-  const planTxt=SLOTS.map(s=>{
-    const items=(D.plan[s.key]||[]).map(pi=>{const f=food(pi.foodId);
+  const tp=planForDate(todayKey());
+  const planTxt=`Today is a "${tp.name}" day.\n`+SLOTS.map(s=>{
+    const items=((tp.slots||{})[s.key]||[]).map(pi=>{const f=food(pi.foodId);
       return f?`${f.name} ${pi.qty}${f.unit==="g"?"g":"x"}`:"";}).filter(Boolean).join(", ");
-    return items?`${s.name}: ${items}`:null; }).filter(Boolean).join("\n");
+    return items?`${s.name}: ${items}`:null; }).filter(Boolean).join("\n")+
+    `\nOther plans: ${D.plans.map(p=>p.name).join(", ")} (auto-assigned by weekday).`;
   return `You are a concise nutrition coach inside the user's personal food tracker app.
 User profile: ${p.gender}, ${p.age}y, ${p.heightCm}cm, current ${T.weight}kg, target ${p.targetWeight}kg by ${p.targetDate}.
 Adaptive daily targets: ${T.kcal} kcal, ${T.protein}g protein, ${T.carbs}g carbs, ${T.fat}g fat, ${wt.glasses} glasses water (250ml).
