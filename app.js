@@ -415,6 +415,7 @@ function renderTrends(){
     <div class="muted" style="margin-top:6px">Targets recalculate from your latest weight & time left — they tighten or relax automatically as you go.</div>`;
   drawWeightChart(); drawBars("kcal-chart","kcal",T.kcal); drawBars("protein-chart","p",T.protein,true);
 }
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 function setupCanvas(id){
   const c=$(id), dpr=window.devicePixelRatio||1;
   const w=c.clientWidth||320, h=+c.getAttribute("height");
@@ -432,21 +433,22 @@ function drawWeightChart(){
   const minW=Math.min(...allW)-1, maxW=Math.max(...allW)+1;
   const X=d=>20+(fromKey(d)-start)/(end-start)*(w-40);
   const Y=v=>12+(maxW-v)/(maxW-minW)*(h-34);
+  const cDim=cssVar("--dim"), cHair=cssVar("--hairline")||cssVar("--border"), cAcc=cssVar("--accent");
   // grid + labels
-  x.fillStyle="#8b949e"; x.font="10px sans-serif";
+  x.fillStyle=cDim; x.font="600 10px -apple-system,sans-serif";
   for(let i=0;i<=3;i++){ const v=minW+(maxW-minW)*i/3;
     x.fillText(v.toFixed(1),2,Y(v)+3);
-    x.strokeStyle="#2d333b"; x.beginPath(); x.moveTo(20,Y(v)); x.lineTo(w-8,Y(v)); x.stroke(); }
+    x.strokeStyle=cHair; x.beginPath(); x.moveTo(20,Y(v)); x.lineTo(w-8,Y(v)); x.stroke(); }
   // target path
-  x.strokeStyle="#8b949e"; x.setLineDash([5,4]); x.beginPath();
+  x.strokeStyle=cDim; x.setLineDash([5,4]); x.beginPath();
   x.moveTo(X(p.startDate),Y(p.startWeight)); x.lineTo(X(p.targetDate),Y(p.targetWeight)); x.stroke();
   x.setLineDash([]);
   // actual
-  x.strokeStyle="#4f8ef7"; x.lineWidth=2; x.beginPath();
+  x.strokeStyle=cAcc; x.lineWidth=2.5; x.lineJoin="round"; x.beginPath();
   pts.forEach((q,i)=>{ const px=clamp(X(q.date),20,w-8);
     i?x.lineTo(px,Y(q.kg)):x.moveTo(px,Y(q.kg)); });
   x.stroke();
-  x.fillStyle="#4f8ef7";
+  x.fillStyle=cAcc;
   pts.forEach(q=>{ const px=clamp(X(q.date),20,w-8);
     x.beginPath(); x.arc(px,Y(q.kg),3.5,0,7); x.fill(); });
 }
@@ -455,6 +457,8 @@ function drawBars(id,fieldName,target,underBad){
   const days=[];
   for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i);
     const k=todayKey(d); days.push({k,v:dayTotals(k)[fieldName]||0}); }
+  const cGood=cssVar("--good"), cOk=cssVar("--ok"), cBad=cssVar("--bad"),
+        cDim=cssVar("--dim"), cText=cssVar("--text");
   const maxV=Math.max(target*1.3,...days.map(d=>d.v));
   const bw=(w-30)/14;
   const ty=12+(maxV-target)/maxV*(h-30);
@@ -462,14 +466,14 @@ function drawBars(id,fieldName,target,underBad){
     if(!d.v) return;
     const bh=d.v/maxV*(h-30);
     let col;
-    if(underBad) col = d.v>=target*0.9?"#34d399":d.v>=target*0.6?"#fbbf24":"#f87171";
-    else col = d.v<=target*1.02?"#34d399":d.v<=target*1.12?"#fbbf24":"#f87171";
+    if(underBad) col = d.v>=target*0.9?cGood:d.v>=target*0.6?cOk:cBad;
+    else col = d.v<=target*1.02?cGood:d.v<=target*1.12?cOk:cBad;
     x.fillStyle=col;
     x.beginPath(); x.roundRect(18+i*bw+2,12+(h-30)-bh,bw-4,bh,3); x.fill();
   });
-  x.strokeStyle="#e6edf3"; x.setLineDash([4,3]); x.beginPath();
-  x.moveTo(16,ty); x.lineTo(w-6,ty); x.stroke(); x.setLineDash([]);
-  x.fillStyle="#8b949e"; x.font="10px sans-serif";
+  x.strokeStyle=cText; x.globalAlpha=0.5; x.setLineDash([4,3]); x.beginPath();
+  x.moveTo(16,ty); x.lineTo(w-6,ty); x.stroke(); x.setLineDash([]); x.globalAlpha=1;
+  x.fillStyle=cDim; x.font="600 10px -apple-system,sans-serif";
   x.fillText(Math.round(target)+(underBad?"g":""),2,ty-3);
 }
 
