@@ -119,6 +119,10 @@ label{display:block;font-size:13px;font-weight:500;color:var(--dim);margin:14px 
 .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .dot.g{background:var(--good)} .dot.o{background:var(--ok)} .dot.b{background:var(--bad)}
 .slot-item .i-name{flex:1}
+.slot-item .i-qty{font-weight:700;font-size:14.5px;color:var(--text);flex-shrink:0;
+  font-variant-numeric:tabular-nums;text-align:right}
+.cook-label{margin:10px 0 2px;font-weight:600;text-transform:uppercase;
+  font-size:11px;letter-spacing:.04em;color:var(--dim)}
 .slot-item .i-macro{color:var(--dim);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
 .slot-item .del{color:var(--bad);font-size:17px;padding:2px 6px;transition:transform .15s var(--springOut)}
 .slot-item .del:active{transform:scale(0.75)}
@@ -257,8 +261,8 @@ hr{border:none;border-top:0.5px solid var(--hairline);margin:14px -16px;padding:
       <button onclick="shiftDay(1)" aria-label="Next day"><svg viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>
     </div>
   </div>
-  <div class="card rise" id="summary-card"></div>
-  <div id="slots"></div>
+  <div id="slots" class="rise"></div>
+  <div class="card" id="summary-card"></div>
   <div class="card" id="water-card"></div>
   <div style="display:flex;gap:8px">
     <button class="btn full" onclick="importHealth()">

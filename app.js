@@ -262,6 +262,10 @@ function itemMacros(f, qty){
            f:r1(f.f*mult), fb:r1((f.fb||0)*mult), sg:r1((f.sg||0)*mult),
            caf:(f.caf?qty:0) };
 }
+function qtyText(f,qty){
+  if(f.unit==="g") return qty+"g"+(f.basis?" "+f.basis:"");
+  return qty+" "+(UNITS[f.unit]||f.unit)+(qty>1?"s":"");
+}
 function qtyLabel(f){
   if(f.unit==="g") return f.basis==="cooked" ? "Grams (COOKED weight)"
                  : f.basis==="raw" ? "Grams (RAW / uncooked weight)" : "Grams";
@@ -404,29 +408,53 @@ function renderToday(){
     const sd=slotData(viewDate,s.key);
     const kcal=sd.items.reduce((a,i)=>a+i.kcal,0);
     const done=sd.items.length>0, skipped=sd.skipped&&!done;
+    const plItems=((planForDate(viewDate).slots||{})[s.key]||[]);
+    const planKcal=plItems.reduce((a,pi)=>{const f=food(pi.foodId);
+      return f?a+itemMacros(f,pi.qty).kcal:a;},0);
+    const showPlan=!done&&plItems.length>0;
     const check = done?`<div class="check done"><svg viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L19.5 7"/></svg></div>`
                 : skipped?`<div class="check skip"></div>`:`<div class="check"></div>`;
-    let items="";
-    for(let i=0;i<sd.items.length;i++){
-      const it=sd.items[i];
-      items+=`<div class="slot-item"><span class="dot ${it.grade}"></span>
-        <span class="i-name">${it.name} <span class="muted">${it.qty}${it.unit==="g"?"g":"×"}</span></span>
-        <span class="i-macro">${it.kcal} kcal · ${it.p}g P</span>
-        <button class="del" onclick="delItem(event,'${s.key}',${i})">✕</button></div>`;
+    let body="";
+    if(showPlan){
+      // COOK VIEW — what to weigh & cook, weights front and center
+      body=`<div class="cook-label">Planned · weigh &amp; cook</div>`;
+      for(const pi of plItems){
+        const f=food(pi.foodId); if(!f) continue;
+        const m=itemMacros(f,pi.qty);
+        body+=`<div class="slot-item"><span class="dot ${gradeOf(f)}"></span>
+          <span class="i-name">${f.name}</span>
+          <span class="i-qty">${qtyText(f,pi.qty)}</span>
+          <span class="i-macro" style="min-width:56px">${m.kcal} kcal</span></div>`;
+      }
+      body+=`<div class="slot-actions">
+        <button class="btn good" onclick="usePlan('${s.key}')">${IC.check}Log all</button>
+        <button class="btn" onclick="openPicker('slot','${s.key}')">${IC.plus}Add</button>
+        <button class="btn" onclick="toggleSkip('${s.key}')">${skipped?"Unskip":"Skip"}</button>
+      </div>`;
+    }else{
+      for(let i=0;i<sd.items.length;i++){
+        const it=sd.items[i];
+        body+=`<div class="slot-item"><span class="dot ${it.grade}"></span>
+          <span class="i-name">${it.name} <span class="muted">${it.qty}${it.unit==="g"?"g":"×"}</span></span>
+          <span class="i-macro">${it.kcal} kcal · ${it.p}g P</span>
+          <button class="del" onclick="delItem(event,'${s.key}',${i})">✕</button></div>`;
+      }
+      body+=`<div class="slot-actions">
+        <button class="btn" onclick="openPicker('slot','${s.key}')">${IC.plus}Add food</button>
+        <button class="btn" onclick="toggleSkip('${s.key}')">${skipped?"Unskip":"Skip"}</button>
+      </div>`;
     }
-    const hasPlan=((planForDate(viewDate).slots||{})[s.key]||[]).length>0;
-    sh+=`<div class="slot" id="slot-${s.key}">
+    const headStat = done ? kcal+" kcal"
+                   : skipped ? "skipped"
+                   : plItems.length ? "~"+planKcal+" kcal" : "";
+    const openCls = (showPlan&&!skipped) ? " open" : "";
+    sh+=`<div class="slot${openCls}" id="slot-${s.key}">
       <div class="slot-head" onclick="toggleSlot('${s.key}')">
         ${check}<span class="s-name">${s.name}</span>
-        <span class="s-kcal">${done?kcal+" kcal":skipped?"skipped":""}</span>
+        <span class="s-kcal">${headStat}</span>
         <svg class="chev" viewBox="0 0 24 24"><path d="M9 5.5l7 6.5-7 6.5"/></svg>
       </div>
-      <div class="slot-body"><div class="sb-in">${items}
-        <div class="slot-actions">
-          ${hasPlan?`<button class="btn good" onclick="usePlan('${s.key}')">${IC.check}Use plan</button>`:""}
-          <button class="btn" onclick="openPicker('slot','${s.key}')">${IC.plus}Add food</button>
-          <button class="btn" onclick="toggleSkip('${s.key}')">${skipped?"Unskip":"Skip"}</button>
-        </div></div></div></div>`;
+      <div class="slot-body"><div class="sb-in">${body}</div></div></div>`;
   }
   $("slots").innerHTML=sh;
 
