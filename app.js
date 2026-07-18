@@ -851,15 +851,17 @@ function editFood(id){
     <button class="btn small" style="margin-top:10px" onclick="usdaLookup()">${IC.search}Look up nutrition (USDA)</button>
     <div id="usda-results"></div>
     <div class="grid2">
-      <div><label>Unit</label><select id="ef-unit">
+      <div><label>Unit</label><select id="ef-unit" onchange="efUnitChanged()">
         ${Object.entries(UNITS).map(([k,v])=>`<option value="${k}" ${f.unit===k?"selected":""}>${v==="g"?"grams":v}</option>`).join("")}
       </select></div>
-      <div><label>Weight basis (for grams)</label><select id="ef-basis">
-        <option value="raw" ${f.basis==="raw"?"selected":""}>raw / uncooked</option>
-        <option value="cooked" ${f.basis==="cooked"?"selected":""}>cooked</option>
-      </select></div>
+      <div><label>Base quantity</label><input id="ef-per" type="number" inputmode="decimal" step="0.5"
+        value="${(f.unit==="g"||f.unit==="ml")?100:1}" onchange="efPerChanged()"></div>
     </div>
-    <p class="muted" style="margin:8px 0 0">Macros per <b>100 g</b> (grams), per <b>100 ml</b> (ml), or per <b>1 unit</b> otherwise.</p>
+    <label>Weight basis (for grams)</label><select id="ef-basis">
+      <option value="raw" ${f.basis==="raw"?"selected":""}>raw / uncooked</option>
+      <option value="cooked" ${f.basis==="cooked"?"selected":""}>cooked</option>
+    </select>
+    <p class="muted" style="margin:8px 0 0">Macros below are for <b>base quantity × unit</b> (e.g. 1 tbsp, 100 g). Change unit or base and the numbers auto-convert (g ↔ ml ↔ tsp ↔ tbsp ↔ cup).</p>
     <div class="grid2">
       <div><label>Calories</label><input id="ef-kcal" type="number" value="${f.kcal}"></div>
       <div><label>Protein g</label><input id="ef-p" type="number" step="0.1" value="${f.p}"></div>
@@ -873,7 +875,33 @@ function editFood(id){
     <button class="btn primary full" style="margin-top:14px" onclick="saveFood('${id||""}')">Save</button>
     ${id?`<button class="btn full warn" style="margin-top:8px" onclick="deleteFood('${id}')">Delete</button>`:""}
     <button class="btn full" style="margin-top:8px" onclick="closeModal('editfood-modal')">Cancel</button>`;
+  _efPrev={unit:f.unit, per:(f.unit==="g"||f.unit==="ml")?100:1};
   openModal("editfood-modal");
+}
+/* --- unit-aware macro conversion (volume equivalents in ml; g assumed ≈ ml) --- */
+const ML_EQ={g:1, ml:1, tsp:5, tbsp:15, cup:250};
+let _efPrev={unit:"g", per:100};
+const EF_FIELDS=["ef-kcal","ef-p","ef-c","ef-f","ef-fb","ef-sg"];
+function efConvert(newUnit,newPer){
+  const o=_efPrev;
+  if(ML_EQ[o.unit]&&ML_EQ[newUnit]&&o.per>0&&newPer>0){
+    const fac=(ML_EQ[newUnit]*newPer)/(ML_EQ[o.unit]*o.per);
+    for(const id of EF_FIELDS){
+      const el=$(id), v=(parseFloat(el.value)||0)*fac;
+      el.value=id==="ef-kcal"?Math.round(v):Math.round(v*10)/10;
+    }
+    toast("Macros converted ✓");
+  }
+  _efPrev={unit:newUnit, per:newPer};
+}
+function efUnitChanged(){
+  const u=$("ef-unit").value;
+  const p=(u==="g"||u==="ml")?100:1;
+  $("ef-per").value=p;
+  efConvert(u,p);
+}
+function efPerChanged(){
+  efConvert($("ef-unit").value, parseFloat($("ef-per").value)||1);
 }
 /* ---------- USDA FoodData Central lookup ---------- */
 let _usda=[];
@@ -911,7 +939,7 @@ async function usdaLookup(){
 }
 function applyUsda(i){
   const f=_usda[i]; if(!f) return;
-  $("ef-unit").value="g";
+  $("ef-unit").value="g"; $("ef-per").value=100; _efPrev={unit:"g",per:100};
   $("ef-kcal").value=nutrVal(f,["Energy"],"KCAL");
   $("ef-p").value=nutrVal(f,["Protein"]);
   $("ef-c").value=nutrVal(f,["Carbohydrate, by difference"]);
@@ -922,10 +950,17 @@ function applyUsda(i){
   toast("Nutrition filled ✓");
 }
 function saveFood(id){
+  const unit=$("ef-unit").value;
+  // normalize entered macros (per base-qty) to canonical storage (per 100 g/ml, or per 1 unit)
+  const canonical=(unit==="g"||unit==="ml")?100:1;
+  const per=parseFloat($("ef-per").value)||canonical;
+  const k=canonical/per;
   const f={ id:id||("c"+Date.now()), name:$("ef-name").value.trim(),
-    unit:$("ef-unit").value, basis:$("ef-unit").value==="g"?$("ef-basis").value:"",
-    kcal:+$("ef-kcal").value||0, p:+$("ef-p").value||0, c:+$("ef-c").value||0,
-    f:+$("ef-f").value||0, fb:+$("ef-fb").value||0, sg:+$("ef-sg").value||0,
+    unit, basis:unit==="g"?$("ef-basis").value:"",
+    kcal:Math.round((+$("ef-kcal").value||0)*k),
+    p:r1((+$("ef-p").value||0)*k), c:r1((+$("ef-c").value||0)*k),
+    f:r1((+$("ef-f").value||0)*k), fb:r1((+$("ef-fb").value||0)*k),
+    sg:r1((+$("ef-sg").value||0)*k),
     caf:$("ef-caf").checked?1:0 };
   if(!f.name){ toast("Name required"); return; }
   const i=D.foods.findIndex(x=>x.id===f.id);
