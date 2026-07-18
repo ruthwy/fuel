@@ -125,7 +125,12 @@ label{display:block;font-size:13px;font-weight:500;color:var(--dim);margin:14px 
 .slot-actions{display:flex;gap:8px;margin-top:12px}
 .btn{background:var(--card2);border-radius:12px;
   padding:11px 16px;font-size:15px;font-weight:600;color:var(--accent);
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
   transition:opacity .15s, transform .18s var(--springOut)}
+.btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.date-nav svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.4;fill:none;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
 .btn.primary{background:var(--accent);color:#fff}
 .btn.good{background:var(--good);color:#fff}
 .btn.warn{color:var(--bad)}
@@ -140,6 +145,8 @@ label{display:block;font-size:13px;font-weight:500;color:var(--dim);margin:14px 
   color:var(--dim);position:relative;overflow:hidden;cursor:pointer;
   transition:border-color .3s, transform .18s var(--springOut)}
 .glass:active{transform:scale(0.88)}
+.glass span{position:relative;z-index:1;margin-bottom:4px;font-size:9px;letter-spacing:-0.02em}
+.glass.full span{color:#fff}
 .glass::after{content:'';position:absolute;inset:5px 4px 4px;background:var(--water);
   border-radius:4px;opacity:0;transform:scaleY(0);transform-origin:bottom;
   transition:transform .45s var(--spring), opacity .25s}
@@ -234,24 +241,29 @@ hr{border:none;border-top:0.5px solid var(--hairline);margin:14px -16px;padding:
   <div class="topbar">
     <h1 id="today-title">Today</h1>
     <div class="date-nav">
-      <button onclick="shiftDay(-1)">‹</button>
+      <button onclick="shiftDay(-1)" aria-label="Previous day"><svg viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
       <span id="today-date"></span>
-      <button onclick="shiftDay(1)">›</button>
+      <button onclick="shiftDay(1)" aria-label="Next day"><svg viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>
     </div>
   </div>
   <div class="card rise" id="summary-card"></div>
   <div id="slots"></div>
   <div class="card" id="water-card"></div>
   <div style="display:flex;gap:8px">
-    <button class="btn full" onclick="importHealth()">⬇ Import from Health</button>
-    <button class="btn full" onclick="syncHealth()">⬆ Export to Health</button>
+    <button class="btn full" onclick="importHealth()">
+      <svg viewBox="0 0 24 24"><path d="M12 3v10.5"/><path d="M8 10l4 4 4-4"/><path d="M4 15.5V18a2.5 2.5 0 0 0 2.5 2.5h11A2.5 2.5 0 0 0 20 18v-2.5"/></svg>
+      Import Health</button>
+    <button class="btn full" onclick="syncHealth()">
+      <svg viewBox="0 0 24 24"><path d="M12 13.5V3"/><path d="M8 7l4-4 4 4"/><path d="M4 15.5V18a2.5 2.5 0 0 0 2.5 2.5h11A2.5 2.5 0 0 0 20 18v-2.5"/></svg>
+      Export Health</button>
   </div>
 </div>
 
 <!-- ============ TRENDS ============ -->
 <div class="page" id="page-trends">
   <div class="topbar"><h1>Trends</h1>
-    <button class="btn small" style="margin-bottom:8px" onclick="openModal('weight-modal')">＋ Log weight</button></div>
+    <button class="btn small" style="margin-bottom:8px" onclick="openModal('weight-modal')">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Log weight</button></div>
   <div class="card" id="goal-card"></div>
   <div class="section-title">Weight vs target path</div>
   <canvas id="weight-chart" height="220"></canvas>
@@ -276,7 +288,8 @@ hr{border:none;border-top:0.5px solid var(--hairline);margin:14px -16px;padding:
   <div id="plan-editor"></div>
   <div id="db-editor" style="display:none">
     <input id="db-search" placeholder="Search foods…" oninput="renderDB()" style="margin-bottom:12px">
-    <button class="btn full" style="margin-bottom:12px" onclick="editFood(null)">＋ Add custom food</button>
+    <button class="btn full" style="margin-bottom:12px" onclick="editFood(null)">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add custom food</button>
     <div id="db-list" class="card" style="padding:0 16px"></div>
   </div>
 </div>

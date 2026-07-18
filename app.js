@@ -96,6 +96,12 @@ function DEFAULT_PLANS(){ return JSON.parse(JSON.stringify([
      night:[{foodId:"paneer",qty:60},{foodId:"roti",qty:1},{foodId:"mveg",qty:100}] } },
 ])); }
 
+const IC={
+  plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  check:'<svg viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L19.5 7"/></svg>',
+  search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8L20.5 20.5"/></svg>',
+};
+
 /* ---------- state ---------- */
 let D = load();
 let viewDate = todayKey();
@@ -292,13 +298,13 @@ function renderToday(){
     html+=`<div class="stat-row muted"><span>Fiber ${r1(tot.fb)} g · Sugar ${r1(tot.sg)} g</span></div>`;
     const hd=day(viewDate).health;
     if(hd) html+=`<div class="stat-row muted" style="margin-top:6px">
-      <span>❤️ Health: ${hd.steps!=null?hd.steps.toLocaleString()+" steps":""}${hd.activeKcal!=null?" · 🔥 "+Math.round(hd.activeKcal)+" active kcal":""}</span>
+      <span>Health: ${hd.steps!=null?hd.steps.toLocaleString()+" steps":""}${hd.activeKcal!=null?" · "+Math.round(hd.activeKcal)+" active kcal":""}</span>
       <span>${D.profile.useHealthEnergy?"driving targets":""}</span></div>`;
   }
   $("summary-card").innerHTML=html;
 
   // slots
-  let sh=`<div class="muted" style="margin:2px 2px 8px">📋 Today's plan: <b style="color:var(--text)">${planForDate(viewDate).name}</b></div>`;
+  let sh=`<div class="muted" style="margin:2px 2px 8px">Today's plan: <b style="color:var(--text)">${planForDate(viewDate).name}</b></div>`;
   for(const s of SLOTS){
     const sd=slotData(viewDate,s.key);
     const kcal=sd.items.reduce((a,i)=>a+i.kcal,0);
@@ -322,8 +328,8 @@ function renderToday(){
       </div>
       <div class="slot-body"><div class="sb-in">${items}
         <div class="slot-actions">
-          ${hasPlan?`<button class="btn good" onclick="usePlan('${s.key}')">✓ Use plan</button>`:""}
-          <button class="btn" onclick="openPicker('slot','${s.key}')">＋ Add food</button>
+          ${hasPlan?`<button class="btn good" onclick="usePlan('${s.key}')">${IC.check}Use plan</button>`:""}
+          <button class="btn" onclick="openPicker('slot','${s.key}')">${IC.plus}Add food</button>
           <button class="btn" onclick="toggleSkip('${s.key}')">${skipped?"Unskip":"Skip"}</button>
         </div></div></div></div>`;
   }
@@ -333,7 +339,9 @@ function renderToday(){
   const wt=waterTarget(viewDate), drankW=day(viewDate).water||0;
   let wg="";
   for(let i=0;i<wt.glasses;i++){
-    wg+=`<div class="glass ${i<drankW?"full":""} ${i>=wt.base?"bonus":""}" onclick="tapGlass(${i})">${(i+1)*250>=1000? r1((i+1)*0.25)+"L":""}</div>`;
+    const L=(i+1)*0.25;
+    const lbl=(L%1===0)? L+"L" : String(L).replace(/^0/,"");
+    wg+=`<div class="glass ${i<drankW?"full":""} ${i>=wt.base?"bonus":""}" onclick="tapGlass(${i})"><span>${lbl}</span></div>`;
   }
   $("water-card").innerHTML=`
     <div class="stat-row"><span style="color:var(--water);font-weight:600">Water</span>
@@ -571,9 +579,14 @@ function renderPlan(){
     });
     html+=`<div class="card"><div class="stat-row" style="margin-bottom:8px">
       <b>${s.name}</b><span class="muted">${kcal?kcal+" kcal":"empty (optional)"}</span></div>
-      ${rows}<button class="btn small" style="margin-top:8px" onclick="openPicker('plan','${s.key}','${pl.id}')">+ Add</button></div>`;
+      ${rows}<button class="btn small" style="margin-top:8px" onclick="openPicker('plan','${s.key}','${pl.id}')">${IC.plus}Add</button></div>`;
   }
+  html+=`<button class="btn full warn" onclick="resetPlans()">Reset all plans to defaults</button>`;
   $("plan-editor").innerHTML=html;
+}
+function resetPlans(){
+  if(!confirm("Restore the 4 default meal plans? Your plan edits will be lost (logged days are untouched).")) return;
+  D.plans=DEFAULT_PLANS(); selPlanId=null; save(); renderPlan(); toast("Plans reset ✓");
 }
 function switchPlan(id){ selPlanId=id; renderPlan(); }
 function renamePlan(v){ if(v.trim()){ selPlan().name=v.trim(); save(); renderPlan(); } }
@@ -611,6 +624,8 @@ function editFood(id){
   $("editfood-title").textContent=id?"Edit food":"New food";
   $("editfood-form").innerHTML=`
     <label>Name</label><input id="ef-name" value="${f.name}">
+    <button class="btn small" style="margin-top:10px" onclick="usdaLookup()">${IC.search}Look up nutrition (USDA)</button>
+    <div id="usda-results"></div>
     <div class="grid2">
       <div><label>Unit</label><select id="ef-unit">
         ${Object.entries(UNITS).map(([k,v])=>`<option value="${k}" ${f.unit===k?"selected":""}>${v==="g"?"grams":v}</option>`).join("")}
@@ -635,6 +650,52 @@ function editFood(id){
     ${id?`<button class="btn full warn" style="margin-top:8px" onclick="deleteFood('${id}')">Delete</button>`:""}
     <button class="btn full" style="margin-top:8px" onclick="closeModal('editfood-modal')">Cancel</button>`;
   openModal("editfood-modal");
+}
+/* ---------- USDA FoodData Central lookup ---------- */
+let _usda=[];
+function nutrVal(food,names,unit){
+  for(const name of names){
+    const n=(food.foodNutrients||[]).find(x=>x.nutrientName===name&&(!unit||x.unitName===unit));
+    if(n&&n.value!=null) return Math.round(n.value*10)/10;
+  }
+  return 0;
+}
+async function usdaLookup(){
+  const q=$("ef-name").value.trim();
+  if(!q){ toast("Type a food name first"); return; }
+  const box=$("usda-results");
+  box.innerHTML=`<p class="muted" style="margin:10px 0 0">Searching USDA…</p>`;
+  try{
+    const key=D.fdcKey||"DEMO_KEY";
+    const res=await fetch("https://api.nal.usda.gov/fdc/v1/foods/search?api_key="+encodeURIComponent(key)
+      +"&pageSize=8&query="+encodeURIComponent(q));
+    if(res.status===429) throw new Error("rate");
+    const j=await res.json();
+    _usda=(j.foods||[]).slice(0,8);
+    if(!_usda.length){ box.innerHTML=`<p class="muted" style="margin:10px 0 0">No USDA match — enter values manually.</p>`; return; }
+    box.innerHTML=`<div class="food-list" style="max-height:30vh;margin:10px 0 0">`+
+      _usda.map((f,i)=>`<div class="food-row" onclick="applyUsda(${i})">
+        <span class="f-name">${f.description}${f.brandName?` <span class="muted">· ${f.brandName}</span>`:""}</span>
+        <span class="f-info">${nutrVal(f,["Energy"],"KCAL")} kcal<br>${nutrVal(f,["Protein"])}g P /100g</span>
+      </div>`).join("")+`</div>
+      <p class="muted" style="margin:8px 0 0">Values are per 100 g (lab-verified). Rate-limited? Add a free key in Profile.</p>`;
+  }catch(e){
+    box.innerHTML=`<p class="muted" style="margin:10px 0 0">${e.message==="rate"
+      ?"Shared demo key is rate-limited right now — add your own free key in Profile (api.data.gov/signup)."
+      :"Lookup failed (offline?). Enter values manually."}</p>`;
+  }
+}
+function applyUsda(i){
+  const f=_usda[i]; if(!f) return;
+  $("ef-unit").value="g";
+  $("ef-kcal").value=nutrVal(f,["Energy"],"KCAL");
+  $("ef-p").value=nutrVal(f,["Protein"]);
+  $("ef-c").value=nutrVal(f,["Carbohydrate, by difference"]);
+  $("ef-f").value=nutrVal(f,["Total lipid (fat)"]);
+  $("ef-fb").value=nutrVal(f,["Fiber, total dietary"]);
+  $("ef-sg").value=nutrVal(f,["Sugars, total including NLEA","Total Sugars","Sugars, Total"]);
+  $("usda-results").innerHTML=`<p class="muted" style="margin:8px 0 0">Applied: ${f.description} (per 100 g). Set the raw/cooked basis below.</p>`;
+  toast("Nutrition filled ✓");
 }
 function saveFood(id){
   const f={ id:id||("c"+Date.now()), name:$("ef-name").value.trim(),
@@ -682,9 +743,15 @@ function renderProfile(){
       <button class="btn primary full" style="margin-top:14px" onclick="saveProfile()">Save profile</button>
     </div>
     <div class="card">
+      <b>Nutrition lookup</b>
+      <label>USDA FoodData key (optional)</label>
+      <input id="pf-fdc" value="${D.fdcKey||""}" placeholder="Uses shared demo key if empty">
+      <p class="muted" style="margin:8px 0 0">Free instant key at api.data.gov/signup — only needed if lookups get rate-limited.</p>
+    </div>
+    <div class="card">
       <b>Data</b>
-      <button class="btn full" style="margin-top:10px" onclick="exportData()">⬇︎ Export backup (JSON)</button>
-      <button class="btn full" style="margin-top:8px" onclick="$('import-file').click()">⬆︎ Import backup</button>
+      <button class="btn full" style="margin-top:10px" onclick="exportData()">Export backup (JSON)</button>
+      <button class="btn full" style="margin-top:8px" onclick="$('import-file').click()">Import backup</button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
       <button class="btn full warn" style="margin-top:8px" onclick="resetAll()">Reset everything</button>
     </div>`;
@@ -697,6 +764,7 @@ function saveProfile(){
     activity:+$("pf-activity").value,
     useHealthEnergy:$("pf-health").checked,
     startDate:(D.profile&&D.profile.startDate)||todayKey() };
+  D.fdcKey=$("pf-fdc").value.trim();
   if(first && !D.weights.length) D.weights.push({date:todayKey(),kg:D.profile.startWeight});
   save(); toast("Profile saved ✓"); go("today");
 }
