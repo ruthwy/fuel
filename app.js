@@ -471,6 +471,32 @@ function renderTrends(){
   drawWeightChart(); drawBars("kcal-chart","kcal",T.kcal); drawBars("protein-chart","p",T.protein,true);
 }
 function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function hexA(hex,a){
+  hex=hex.trim();
+  if(hex.startsWith("rgba")) return hex.replace(/[\d.]+\)$/,a+")");
+  if(hex.startsWith("rgb")) return hex.replace("rgb(","rgba(").replace(")",","+a+")");
+  const n=parseInt(hex.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
+  return `rgba(${r},${g},${b},${a})`;
+}
+function smoothPath(x,pts){ // Catmull-Rom → bezier, buttery curves
+  x.moveTo(pts[0].x,pts[0].y);
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(pts.length-1,i+2)];
+    x.bezierCurveTo(p1.x+(p2.x-p0.x)/6, p1.y+(p2.y-p0.y)/6,
+                    p2.x-(p3.x-p1.x)/6, p2.y-(p3.y-p1.y)/6, p2.x, p2.y);
+  }
+}
+function animateChart(canvas,draw,dur){
+  const tok=canvas._tok=(canvas._tok||0)+1;
+  const t0=performance.now();
+  function step(now){
+    if(canvas._tok!==tok) return;
+    const raw=Math.min(1,(now-t0)/dur);
+    draw(1-Math.pow(1-raw,3));
+    if(raw<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 function setupCanvas(id){
   const c=$(id), dpr=window.devicePixelRatio||1;
   const w=c.clientWidth||320, h=+c.getAttribute("height");
@@ -480,56 +506,100 @@ function setupCanvas(id){
   return {x,w,h};
 }
 function drawWeightChart(){
+  const c=$("weight-chart");
   const {x,w,h}=setupCanvas("weight-chart");
   const p=D.profile;
-  const pts=D.weights.length?D.weights:[{date:p.startDate,kg:p.startWeight}];
+  const raw=D.weights.length?D.weights:[{date:p.startDate,kg:p.startWeight}];
   const start=fromKey(p.startDate), end=fromKey(p.targetDate);
-  const allW=[...pts.map(q=>q.kg),p.startWeight,p.targetWeight];
-  const minW=Math.min(...allW)-1, maxW=Math.max(...allW)+1;
-  const X=d=>20+(fromKey(d)-start)/(end-start)*(w-40);
-  const Y=v=>12+(maxW-v)/(maxW-minW)*(h-34);
-  const cDim=cssVar("--dim"), cHair=cssVar("--hairline")||cssVar("--border"), cAcc=cssVar("--accent");
-  // grid + labels
-  x.fillStyle=cDim; x.font="600 10px -apple-system,sans-serif";
-  for(let i=0;i<=3;i++){ const v=minW+(maxW-minW)*i/3;
-    x.fillText(v.toFixed(1),2,Y(v)+3);
-    x.strokeStyle=cHair; x.beginPath(); x.moveTo(20,Y(v)); x.lineTo(w-8,Y(v)); x.stroke(); }
-  // target path
-  x.strokeStyle=cDim; x.setLineDash([5,4]); x.beginPath();
-  x.moveTo(X(p.startDate),Y(p.startWeight)); x.lineTo(X(p.targetDate),Y(p.targetWeight)); x.stroke();
-  x.setLineDash([]);
-  // actual
-  x.strokeStyle=cAcc; x.lineWidth=2.5; x.lineJoin="round"; x.beginPath();
-  pts.forEach((q,i)=>{ const px=clamp(X(q.date),20,w-8);
-    i?x.lineTo(px,Y(q.kg)):x.moveTo(px,Y(q.kg)); });
-  x.stroke();
-  x.fillStyle=cAcc;
-  pts.forEach(q=>{ const px=clamp(X(q.date),20,w-8);
-    x.beginPath(); x.arc(px,Y(q.kg),3.5,0,7); x.fill(); });
+  const allW=[...raw.map(q=>q.kg),p.startWeight,p.targetWeight];
+  const minW=Math.min(...allW)-0.8, maxW=Math.max(...allW)+0.8;
+  const L=34,R=14,T=14,B=22;
+  const X=d=>L+clamp((fromKey(d)-start)/(end-start),0,1)*(w-L-R);
+  const Y=v=>T+(maxW-v)/(maxW-minW)*(h-T-B);
+  const pts=raw.map(q=>({x:X(q.date),y:Y(q.kg)}));
+  const cDim=cssVar("--dim"), cHair=cssVar("--hairline"), cAcc=cssVar("--accent"), cCard=cssVar("--card");
+  animateChart(c,t=>{
+    x.clearRect(0,0,w,h);
+    // minimal grid
+    x.font="600 10px -apple-system,sans-serif"; x.textAlign="left";
+    for(let i=0;i<=3;i++){
+      const v=minW+(maxW-minW)*(3-i)/3, gy=Y(v);
+      x.strokeStyle=cHair; x.beginPath(); x.moveTo(L,gy); x.lineTo(w-R,gy); x.stroke();
+      x.fillStyle=cDim; x.fillText(v.toFixed(1),4,gy+3);
+    }
+    // target path — quiet dashed guide
+    x.save(); x.globalAlpha=0.55; x.strokeStyle=cDim; x.lineWidth=1.5; x.setLineDash([4,5]);
+    x.beginPath(); x.moveTo(X(p.startDate),Y(p.startWeight)); x.lineTo(X(p.targetDate),Y(p.targetWeight));
+    x.stroke(); x.restore();
+    // clip for draw-in sweep
+    x.save();
+    x.beginPath(); x.rect(0,0,L+(w-L-R)*t+2,h); x.clip();
+    if(pts.length>1){
+      // gradient area fill
+      const grad=x.createLinearGradient(0,T,0,h-B);
+      grad.addColorStop(0,hexA(cAcc,0.26)); grad.addColorStop(1,hexA(cAcc,0));
+      x.beginPath(); smoothPath(x,pts);
+      x.lineTo(pts[pts.length-1].x,h-B); x.lineTo(pts[0].x,h-B); x.closePath();
+      x.fillStyle=grad; x.fill();
+      // glowing line
+      x.beginPath(); smoothPath(x,pts);
+      x.strokeStyle=cAcc; x.lineWidth=2.5; x.lineJoin="round"; x.lineCap="round";
+      x.shadowColor=hexA(cAcc,0.45); x.shadowBlur=10;
+      x.stroke(); x.shadowBlur=0;
+    }
+    x.restore();
+    // endpoint dot with halo
+    if(t>0.97 && pts.length){
+      const lp=pts[pts.length-1];
+      x.beginPath(); x.arc(lp.x,lp.y,9,0,7); x.fillStyle=hexA(cAcc,0.18); x.fill();
+      x.beginPath(); x.arc(lp.x,lp.y,4.5,0,7); x.fillStyle=cAcc; x.fill();
+      x.beginPath(); x.arc(lp.x,lp.y,2,0,7); x.fillStyle=cCard; x.fill();
+    }
+  },900);
 }
 function drawBars(id,fieldName,target,underBad){
+  const c=$(id);
   const {x,w,h}=setupCanvas(id);
   const days=[];
   for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i);
-    const k=todayKey(d); days.push({k,v:dayTotals(k)[fieldName]||0}); }
+    const k=todayKey(d);
+    days.push({k,v:dayTotals(k)[fieldName]||0,wd:"SMTWTFS"[fromKey(k).getDay()],today:i===0}); }
   const cGood=cssVar("--good"), cOk=cssVar("--ok"), cBad=cssVar("--bad"),
-        cDim=cssVar("--dim"), cText=cssVar("--text");
+        cDim=cssVar("--dim"), cText=cssVar("--text"), cTrack=cssVar("--card2");
   const maxV=Math.max(target*1.3,...days.map(d=>d.v));
-  const bw=(w-30)/14;
-  const ty=12+(maxV-target)/maxV*(h-30);
-  days.forEach((d,i)=>{
-    if(!d.v) return;
-    const bh=d.v/maxV*(h-30);
-    let col;
-    if(underBad) col = d.v>=target*0.9?cGood:d.v>=target*0.6?cOk:cBad;
-    else col = d.v<=target*1.02?cGood:d.v<=target*1.12?cOk:cBad;
-    x.fillStyle=col;
-    x.beginPath(); x.roundRect(18+i*bw+2,12+(h-30)-bh,bw-4,bh,3); x.fill();
-  });
-  x.strokeStyle=cText; x.globalAlpha=0.5; x.setLineDash([4,3]); x.beginPath();
-  x.moveTo(16,ty); x.lineTo(w-6,ty); x.stroke(); x.setLineDash([]); x.globalAlpha=1;
-  x.fillStyle=cDim; x.font="600 10px -apple-system,sans-serif";
-  x.fillText(Math.round(target)+(underBad?"g":""),2,ty-3);
+  const L=14,R=10,T=14,B=26;
+  const areaH=h-T-B, bw=(w-L-R)/14, capW=Math.min(bw-7,14), rad=capW/2;
+  const ty=T+(maxV-target)/maxV*areaH;
+  animateChart(c,t=>{
+    x.clearRect(0,0,w,h);
+    days.forEach((d,i)=>{
+      const cx=L+i*bw+bw/2;
+      // ghost track capsule
+      x.fillStyle=cTrack;
+      x.beginPath(); x.roundRect(cx-capW/2,T,capW,areaH,rad); x.fill();
+      // weekday label
+      x.fillStyle=d.today?cText:cDim; x.font=(d.today?"800":"600")+" 9px -apple-system,sans-serif";
+      x.textAlign="center"; x.fillText(d.wd,cx,h-9);
+      if(!d.v) return;
+      let col;
+      if(underBad) col = d.v>=target*0.9?cGood:d.v>=target*0.6?cOk:cBad;
+      else col = d.v<=target*1.02?cGood:d.v<=target*1.12?cOk:cBad;
+      const bh=Math.max(capW,(d.v/maxV)*areaH*t);
+      const by=T+areaH-bh;
+      const grad=x.createLinearGradient(0,by,0,T+areaH);
+      grad.addColorStop(0,col); grad.addColorStop(1,hexA(col,0.55));
+      x.fillStyle=grad;
+      x.beginPath(); x.roundRect(cx-capW/2,by,capW,bh,rad); x.fill();
+    });
+    // goal line + chip
+    x.save(); x.globalAlpha=0.65; x.strokeStyle=cText; x.lineWidth=1.2; x.setLineDash([3,4]);
+    x.beginPath(); x.moveTo(L-4,ty); x.lineTo(w-R,ty); x.stroke(); x.restore();
+    const lbl=Math.round(target)+(underBad?"g":"");
+    x.font="700 9px -apple-system,sans-serif";
+    const tw=x.measureText(lbl).width+10;
+    x.fillStyle=cTrack; x.beginPath(); x.roundRect(L-4,ty-16,tw,13,6.5); x.fill();
+    x.fillStyle=cDim; x.textAlign="left"; x.fillText(lbl,L+1,ty-6);
+  },850);
 }
 
 /* ---------- FOODS / PLAN ---------- */
