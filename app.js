@@ -748,10 +748,10 @@ async function usdaLookup(){
         <span class="f-name">${f.description}${f.brandName?` <span class="muted">· ${f.brandName}</span>`:""}</span>
         <span class="f-info">${nutrVal(f,["Energy"],"KCAL")} kcal<br>${nutrVal(f,["Protein"])}g P /100g</span>
       </div>`).join("")+`</div>
-      <p class="muted" style="margin:8px 0 0">Values are per 100 g (lab-verified). Rate-limited? Add a free key in Profile.</p>`;
+      <p class="muted" style="margin:8px 0 0">Values are per 100 g (lab-verified, USDA).</p>`;
   }catch(e){
     box.innerHTML=`<p class="muted" style="margin:10px 0 0">${e.message==="rate"
-      ?"Shared demo key is rate-limited right now — add your own free key in Profile (api.data.gov/signup)."
+      ?"Lookup temporarily rate-limited — try again in a bit."
       :"Lookup failed (offline?). Enter values manually."}</p>`;
   }
 }
@@ -813,12 +813,6 @@ function renderProfile(){
       <button class="btn primary full" style="margin-top:14px" onclick="saveProfile()">Save profile</button>
     </div>
     <div class="card">
-      <b>Nutrition lookup</b>
-      <label>USDA FoodData key (optional)</label>
-      <input id="pf-fdc" value="${D.fdcKey||""}" placeholder="Uses shared demo key if empty">
-      <p class="muted" style="margin:8px 0 0">Free instant key at api.data.gov/signup — only needed if lookups get rate-limited.</p>
-    </div>
-    <div class="card">
       <b>Data</b>
       <button class="btn full" style="margin-top:10px" onclick="exportData()">Export backup (JSON)</button>
       <button class="btn full" style="margin-top:8px" onclick="$('import-file').click()">Import backup</button>
@@ -834,7 +828,6 @@ function saveProfile(){
     activity:+$("pf-activity").value,
     useHealthEnergy:$("pf-health").checked,
     startDate:(D.profile&&D.profile.startDate)||todayKey() };
-  D.fdcKey=$("pf-fdc").value.trim();
   if(first && !D.weights.length) D.weights.push({date:todayKey(),kg:D.profile.startWeight});
   save(); toast("Profile saved ✓"); go("today");
 }
