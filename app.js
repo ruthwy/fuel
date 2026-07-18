@@ -62,6 +62,96 @@ const STARTER_FOODS = [
  {id:"tea",     name:"Tea (milk+sugar)",      unit:"cup",basis:"",      kcal:45,p:1.5,c:7,f:1.5,fb:0,sg:6,caf:1},
  {id:"gtea",    name:"Green tea",             unit:"cup",basis:"",      kcal:0,p:0,c:0,f:0,fb:0,sg:0,caf:1},
  {id:"biscuit", name:"Biscuit (marie)",       unit:"pc",basis:"",       kcal:28,p:0.4,c:4.5,f:0.9,fb:0.1,sg:1.5},
+ /* --- Indian dishes (cooked, per 100g unless per-piece) --- */
+ {id:"upmac",   name:"Upma (cooked)",         unit:"g", basis:"cooked", kcal:85,p:2.5,c:12,f:3,fb:1,sg:0.5},
+ {id:"pohac",   name:"Poha (cooked)",         unit:"g", basis:"cooked", kcal:110,p:2,c:20,f:2.5,fb:1,sg:0.5},
+ {id:"mdosa",   name:"Masala dosa",           unit:"pc",basis:"",       kcal:350,p:6,c:45,f:15,fb:3,sg:2},
+ {id:"uttapam", name:"Uttapam",               unit:"pc",basis:"",       kcal:200,p:5,c:30,f:6,fb:2,sg:1},
+ {id:"vada",    name:"Medu vada",             unit:"pc",basis:"",       kcal:145,p:3.5,c:12,f:9,fb:1.5,sg:0.5},
+ {id:"poori",   name:"Poori",                 unit:"pc",basis:"",       kcal:150,p:2,c:15,f:9,fb:0.8,sg:0},
+ {id:"paratha", name:"Paratha (plain)",       unit:"pc",basis:"",       kcal:250,p:5,c:30,f:12,fb:2.5,sg:0.5},
+ {id:"rasam",   name:"Rasam",                 unit:"g", basis:"cooked", kcal:25,p:1,c:4,f:0.5,fb:0.5,sg:1},
+ {id:"curdrice",name:"Curd rice",             unit:"g", basis:"cooked", kcal:95,p:2.5,c:13,f:3.5,fb:0.3,sg:1.5},
+ {id:"lemrice", name:"Lemon rice",            unit:"g", basis:"cooked", kcal:140,p:2.5,c:22,f:4.5,fb:0.8,sg:0.5},
+ {id:"pulao",   name:"Veg pulao",             unit:"g", basis:"cooked", kcal:145,p:3,c:22,f:4.5,fb:1.5,sg:1},
+ {id:"vbiryani",name:"Veg biryani",           unit:"g", basis:"cooked", kcal:140,p:3,c:22,f:4.5,fb:1.5,sg:1},
+ {id:"khichdi", name:"Khichdi",               unit:"g", basis:"cooked", kcal:100,p:4,c:16,f:2,fb:2,sg:0.5},
+ {id:"daltad",  name:"Dal tadka (cooked)",    unit:"g", basis:"cooked", kcal:120,p:5,c:12,f:5.5,fb:2.5,sg:1},
+ {id:"dalplain",name:"Dal plain (cooked)",    unit:"g", basis:"cooked", kcal:105,p:6,c:15,f:2,fb:3,sg:0.5},
+ {id:"chole",   name:"Chole (cooked)",        unit:"g", basis:"cooked", kcal:150,p:7,c:18,f:5.5,fb:5,sg:2},
+ {id:"rajmac",  name:"Rajma (cooked)",        unit:"g", basis:"cooked", kcal:130,p:7,c:17,f:3.5,fb:6,sg:1},
+ {id:"palakp",  name:"Palak paneer",          unit:"g", basis:"cooked", kcal:145,p:7,c:5,f:11,fb:2,sg:2},
+ {id:"pbm",     name:"Paneer butter masala",  unit:"g", basis:"cooked", kcal:200,p:7,c:8,f:16,fb:1.5,sg:4},
+ {id:"chtikka", name:"Chicken tikka",         unit:"g", basis:"cooked", kcal:150,p:22,c:3,f:5.5,fb:0.5,sg:1},
+ {id:"tandoori",name:"Tandoori chicken",      unit:"g", basis:"cooked", kcal:150,p:20,c:3,f:6.5,fb:0.5,sg:1},
+ {id:"butterch",name:"Butter chicken",        unit:"g", basis:"cooked", kcal:200,p:13,c:6,f:14,fb:0.8,sg:3},
+ {id:"eggcurry",name:"Egg curry",             unit:"g", basis:"cooked", kcal:130,p:8,c:4,f:9,fb:0.8,sg:2},
+ {id:"bhurji",  name:"Egg bhurji",            unit:"g", basis:"cooked", kcal:160,p:10,c:3,f:12,fb:0.5,sg:1},
+ {id:"fishcur", name:"Fish curry",            unit:"g", basis:"cooked", kcal:120,p:13,c:4,f:6,fb:0.5,sg:1},
+ {id:"muttoncur",name:"Mutton curry",         unit:"g", basis:"cooked", kcal:175,p:16,c:3,f:11,fb:0.5,sg:1},
+ {id:"dhokla",  name:"Dhokla",                unit:"g", basis:"cooked", kcal:160,p:6,c:22,f:5,fb:2,sg:3},
+ {id:"samosa",  name:"Samosa",                unit:"pc",basis:"",       kcal:260,p:4,c:28,f:15,fb:2,sg:1.5},
+ {id:"pakora",  name:"Pakora",                unit:"g", basis:"cooked", kcal:300,p:7,c:28,f:18,fb:3,sg:2},
+ {id:"gulab",   name:"Gulab jamun",           unit:"pc",basis:"",       kcal:150,p:2,c:22,f:6,fb:0.3,sg:16},
+ {id:"jalebi",  name:"Jalebi",                unit:"g", basis:"cooked", kcal:400,p:2,c:70,f:12,fb:0.2,sg:40},
+ {id:"kheer",   name:"Kheer",                 unit:"g", basis:"cooked", kcal:130,p:3.5,c:20,f:4,fb:0.2,sg:14},
+ {id:"halwa",   name:"Sooji halwa",           unit:"g", basis:"cooked", kcal:320,p:4,c:45,f:14,fb:1,sg:25},
+ /* --- proteins --- */
+ {id:"tofu",    name:"Tofu",                  unit:"g", basis:"raw",    kcal:76,p:8,c:2,f:4.5,fb:0.4,sg:0.5},
+ {id:"sprouts", name:"Moong sprouts",         unit:"g", basis:"raw",    kcal:30,p:3,c:6,f:0.2,fb:1.8,sg:2},
+ {id:"gyog",    name:"Greek yogurt",          unit:"g", basis:"raw",    kcal:60,p:10,c:3.5,f:0.5,fb:0,sg:3.5},
+ {id:"chthigh", name:"Chicken thigh (raw)",   unit:"g", basis:"raw",    kcal:145,p:19,c:0,f:8,fb:0,sg:0},
+ {id:"prawns",  name:"Prawns (raw)",          unit:"g", basis:"raw",    kcal:85,p:18,c:0,f:1,fb:0,sg:0},
+ {id:"mutton",  name:"Mutton (raw)",          unit:"g", basis:"raw",    kcal:200,p:17,c:0,f:15,fb:0,sg:0},
+ {id:"protbar", name:"Protein bar",           unit:"pc",basis:"",       kcal:200,p:20,c:20,f:7,fb:3,sg:10},
+ /* --- grains & flours (dry/raw) --- */
+ {id:"atta",    name:"Wheat atta (dry)",      unit:"g", basis:"raw",    kcal:340,p:12,c:72,f:1.7,fb:11,sg:0},
+ {id:"riceraw", name:"White rice (dry)",      unit:"g", basis:"raw",    kcal:360,p:6.6,c:79,f:0.6,fb:1,sg:0},
+ {id:"quinoa",  name:"Quinoa (dry)",          unit:"g", basis:"raw",    kcal:368,p:14,c:64,f:6,fb:7,sg:0},
+ {id:"ragi",    name:"Ragi / millet (dry)",   unit:"g", basis:"raw",    kcal:328,p:7.3,c:72,f:1.3,fb:11,sg:0.6},
+ {id:"vermi",   name:"Vermicelli (dry)",      unit:"g", basis:"raw",    kcal:350,p:8,c:78,f:0.5,fb:2,sg:0},
+ {id:"bbread",  name:"Brown bread",           unit:"pc",basis:"",       kcal:70,p:2.6,c:12,f:1,fb:1.5,sg:1.5},
+ {id:"cflakes", name:"Corn flakes",           unit:"g", basis:"raw",    kcal:380,p:7,c:84,f:0.5,fb:3,sg:8},
+ {id:"muesli",  name:"Muesli",                unit:"g", basis:"raw",    kcal:400,p:9,c:66,f:10,fb:7,sg:15},
+ /* --- fruits (per 100g) --- */
+ {id:"mango",   name:"Mango",                 unit:"g", basis:"raw",    kcal:60,p:0.8,c:15,f:0.4,fb:1.6,sg:13.7},
+ {id:"orange",  name:"Orange",                unit:"g", basis:"raw",    kcal:47,p:0.9,c:12,f:0.1,fb:2.4,sg:9},
+ {id:"grapes",  name:"Grapes",                unit:"g", basis:"raw",    kcal:69,p:0.7,c:18,f:0.2,fb:0.9,sg:16},
+ {id:"papaya",  name:"Papaya",                unit:"g", basis:"raw",    kcal:43,p:0.5,c:11,f:0.3,fb:1.7,sg:8},
+ {id:"wmelon",  name:"Watermelon",            unit:"g", basis:"raw",    kcal:30,p:0.6,c:8,f:0.2,fb:0.4,sg:6},
+ {id:"pomeg",   name:"Pomegranate",           unit:"g", basis:"raw",    kcal:83,p:1.7,c:19,f:1.2,fb:4,sg:14},
+ {id:"guava",   name:"Guava",                 unit:"g", basis:"raw",    kcal:68,p:2.6,c:14,f:1,fb:5.4,sg:9},
+ /* --- vegetables (raw, per 100g) --- */
+ {id:"potato",  name:"Potato",                unit:"g", basis:"raw",    kcal:77,p:2,c:17,f:0.1,fb:2.2,sg:0.8},
+ {id:"onion",   name:"Onion",                 unit:"g", basis:"raw",    kcal:40,p:1.1,c:9,f:0.1,fb:1.7,sg:4.2},
+ {id:"tomato",  name:"Tomato",                unit:"g", basis:"raw",    kcal:18,p:0.9,c:3.9,f:0.2,fb:1.2,sg:2.6},
+ {id:"carrot",  name:"Carrot",                unit:"g", basis:"raw",    kcal:41,p:0.9,c:10,f:0.2,fb:2.8,sg:4.7},
+ {id:"cucumber",name:"Cucumber",              unit:"g", basis:"raw",    kcal:15,p:0.7,c:3.6,f:0.1,fb:0.5,sg:1.7},
+ {id:"spinach", name:"Spinach / palak",       unit:"g", basis:"raw",    kcal:23,p:2.9,c:3.6,f:0.4,fb:2.2,sg:0.4},
+ {id:"broccoli",name:"Broccoli",              unit:"g", basis:"raw",    kcal:34,p:2.8,c:7,f:0.4,fb:2.6,sg:1.7},
+ {id:"bhindi",  name:"Bhindi / okra",         unit:"g", basis:"raw",    kcal:33,p:1.9,c:7.5,f:0.2,fb:3.2,sg:1.5},
+ {id:"cauli",   name:"Cauliflower",           unit:"g", basis:"raw",    kcal:25,p:1.9,c:5,f:0.3,fb:2,sg:1.9},
+ {id:"capsicum",name:"Capsicum",              unit:"g", basis:"raw",    kcal:20,p:0.9,c:4.6,f:0.2,fb:1.7,sg:2.4},
+ {id:"beetroot",name:"Beetroot",              unit:"g", basis:"raw",    kcal:43,p:1.6,c:10,f:0.2,fb:2.8,sg:6.8},
+ /* --- dairy, fats, nuts, misc --- */
+ {id:"fcmilk",  name:"Milk (full cream, 200ml)",unit:"cup",basis:"",    kcal:130,p:6.6,c:9.6,f:7,fb:0,sg:9.6},
+ {id:"bmilk",   name:"Buttermilk (200ml)",    unit:"cup",basis:"",      kcal:30,p:1.5,c:3,f:1,fb:0,sg:3},
+ {id:"cheese",  name:"Cheese slice",          unit:"pc",basis:"",       kcal:60,p:3.5,c:1,f:4.5,fb:0,sg:0.5},
+ {id:"butter",  name:"Butter",                unit:"tsp",basis:"",      kcal:36,p:0,c:0,f:4,fb:0,sg:0},
+ {id:"oil",     name:"Cooking oil",           unit:"tsp",basis:"",      kcal:40,p:0,c:0,f:4.5,fb:0,sg:0},
+ {id:"cashew",  name:"Cashews",               unit:"g", basis:"raw",    kcal:553,p:18,c:30,f:44,fb:3.3,sg:6},
+ {id:"walnut",  name:"Walnuts",               unit:"g", basis:"raw",    kcal:654,p:15,c:14,f:65,fb:6.7,sg:2.6},
+ {id:"raisins", name:"Raisins",               unit:"g", basis:"raw",    kcal:299,p:3,c:79,f:0.5,fb:3.7,sg:59},
+ {id:"dates",   name:"Dates",                 unit:"pc",basis:"",       kcal:23,p:0.2,c:6,f:0,fb:0.6,sg:5},
+ {id:"honey",   name:"Honey",                 unit:"tsp",basis:"",      kcal:21,p:0,c:5.8,f:0,fb:0,sg:5.7},
+ {id:"sugar",   name:"Sugar",                 unit:"tsp",basis:"",      kcal:16,p:0,c:4,f:0,fb:0,sg:4},
+ {id:"jaggery", name:"Jaggery",               unit:"tsp",basis:"",      kcal:19,p:0,c:5,f:0,fb:0,sg:4.7},
+ {id:"ketchup", name:"Ketchup",               unit:"tbsp",basis:"",     kcal:17,p:0.2,c:4.5,f:0,fb:0.1,sg:3.7},
+ {id:"mayo",    name:"Mayonnaise",            unit:"tbsp",basis:"",     kcal:90,p:0.1,c:0.6,f:10,fb:0,sg:0.5},
+ {id:"maggi",   name:"Maggi (1 pack)",        unit:"pc",basis:"",       kcal:280,p:6,c:40,f:11,fb:1.5,sg:1.5},
+ {id:"softdrink",name:"Soft drink (250ml)",   unit:"cup",basis:"",      kcal:105,p:0,c:26,f:0,fb:0,sg:26},
+ {id:"juice",   name:"Fruit juice (250ml)",   unit:"cup",basis:"",      kcal:110,p:1,c:26,f:0.2,fb:0.5,sg:22},
+ {id:"cocwater",name:"Coconut water (250ml)", unit:"cup",basis:"",      kcal:45,p:0.5,c:9,f:0.2,fb:0,sg:9},
 ];
 
 /* days: JS weekday numbers (0=Sun … 6=Sat) */
@@ -115,6 +205,11 @@ function migrate(d){
     d.plans=DEFAULT_PLANS();
     delete d.plan;
     d.v=2;
+  }
+  if(d.v < 3){ // merge expanded food DB, keep user's existing/custom entries
+    const have=new Set((d.foods||[]).map(f=>f.id));
+    for(const f of STARTER_FOODS) if(!have.has(f.id)) d.foods.push(f);
+    d.v=3;
   }
   return d;
 }
@@ -401,7 +496,8 @@ function openPicker(target,slot,planId){
 }
 function renderFoodPicker(){
   const q=$("food-search").value.toLowerCase();
-  const list=D.foods.filter(f=>f.name.toLowerCase().includes(q));
+  const list=D.foods.filter(f=>f.name.toLowerCase().includes(q))
+    .sort((a,b)=>a.name.localeCompare(b.name));
   $("food-picker").innerHTML=list.map(f=>`
     <div class="food-row" onclick="pickFood('${f.id}')">
       <span class="dot ${gradeOf(f)}"></span><span class="f-name">${f.name}</span>
@@ -681,7 +777,8 @@ function delPlanItem(slot,i){ selPlan().slots[slot].splice(i,1); save(); renderP
 
 function renderDB(){
   const q=($("db-search").value||"").toLowerCase();
-  const list=D.foods.filter(f=>f.name.toLowerCase().includes(q));
+  const list=D.foods.filter(f=>f.name.toLowerCase().includes(q))
+    .sort((a,b)=>a.name.localeCompare(b.name));
   $("db-list").innerHTML=list.map(f=>`
     <div class="food-row" onclick="editFood('${f.id}')">
       <span class="dot ${gradeOf(f)}"></span><span class="f-name">${f.name}</span>
@@ -849,12 +946,18 @@ function resetAll(){
 }
 
 /* ---------- CHAT (Coach) ---------- */
-function renderChat(){
+function renderChat(animLast){
   $("chat-setup").style.display = D.apiKey ? "none" : "block";
-  const log=$("chatlog");
-  log.innerHTML=(D.chat||[]).map(m=>`<div class="msg ${m.role==="user"?"me":"ai"}">${escapeHtml(m.content)}</div>`).join("");
-  log.scrollTop=log.scrollHeight;
+  const log=$("chatlog"), msgs=D.chat||[];
+  log.innerHTML=msgs.map((m,i)=>
+    `<div class="msg ${m.role==="user"?"me":"ai"}${animLast&&i===msgs.length-1?" anim":""}">${escapeHtml(m.content)}</div>`).join("");
+  window.scrollTo(0,document.body.scrollHeight);
 }
+// auto-grow the chat textarea
+$("chat-text")?.addEventListener("input",function(){
+  this.style.height="46px";
+  this.style.height=Math.min(120,this.scrollHeight)+"px";
+});
 function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 function saveApiKey(){ D.apiKey=$("api-key-input").value.trim(); save(); renderChat();
   if(D.apiKey) toast("Coach enabled ✓"); }
@@ -880,15 +983,20 @@ User's default meal plan:\n${planTxt}
 Food DB includes Indian staples; rice is tracked by COOKED weight, dals/meats by RAW weight.
 Answer briefly and practically. Suggest concrete foods/quantities from their plan and remaining macros when relevant.`;
 }
+let _sending=false;
 async function sendChat(){
   const txt=$("chat-text").value.trim();
-  if(!txt) return;
+  if(!txt||_sending) return;
   if(!D.apiKey){ toast("Add your API key first"); renderChat(); return; }
   if(!D.profile){ toast("Set up profile first"); return; }
-  $("chat-text").value="";
-  D.chat.push({role:"user",content:txt}); save(); renderChat();
+  _sending=true;
+  const ta=$("chat-text"); ta.value=""; ta.style.height="46px";
+  D.chat.push({role:"user",content:txt}); save();
   const log=$("chatlog");
-  log.insertAdjacentHTML("beforeend",`<div class="msg ai" id="pending">…</div>`);
+  log.insertAdjacentHTML("beforeend",
+    `<div class="msg me anim">${escapeHtml(txt)}</div>
+     <div class="msg ai anim typing" id="pending"><span></span><span></span><span></span></div>`);
+  log.scrollIntoView(false); window.scrollTo(0,document.body.scrollHeight);
   try{
     const res=await fetch("https://api.openai.com/v1/chat/completions",{
       method:"POST",
@@ -904,7 +1012,8 @@ async function sendChat(){
     if(D.chat.length>40) D.chat=D.chat.slice(-40);
     save();
   }catch(e){ D.chat.push({role:"assistant",content:"Network error: "+e.message}); save(); }
-  renderChat();
+  _sending=false;
+  renderChat(true);
 }
 $("chat-text")?.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendChat(); }});
