@@ -12,7 +12,7 @@ const SLOTS = [
   { key:"night",   name:"Night" },
 ];
 
-const UNITS = { g:"g", pc:"piece", cup:"cup", tbsp:"tbsp", tsp:"tsp", scoop:"scoop" };
+const UNITS = { g:"g", ml:"ml", pc:"piece", cup:"cup", tbsp:"tbsp", tsp:"tsp", scoop:"scoop" };
 
 /* ---------- starter food DB ----------
    unit 'g'  -> macros are per 100 g, `basis` says cooked/raw weight
@@ -44,7 +44,7 @@ const STARTER_FOODS = [
  {id:"fish",    name:"Fish (rohu/tilapia)",   unit:"g", basis:"raw",    kcal:96,p:20,c:0,f:1.7,fb:0,sg:0},
  {id:"paneer",  name:"Paneer",                unit:"g", basis:"raw",    kcal:265,p:18,c:3.5,f:20,fb:0,sg:2},
  {id:"curd",    name:"Curd / dahi",           unit:"g", basis:"raw",    kcal:60,p:3.5,c:4.7,f:3.3,fb:0,sg:4.7},
- {id:"milk",    name:"Milk (toned, 200ml)",   unit:"cup",basis:"",      kcal:116,p:6.4,c:9.6,f:4.2,fb:0,sg:9.6},
+ {id:"milk",    name:"Milk (toned)",          unit:"ml",basis:"",       kcal:58,p:3.2,c:4.8,f:2.1,fb:0,sg:4.8},
  {id:"whey",    name:"Whey protein",          unit:"g", basis:"raw",    kcal:400,p:80,c:10,f:5,fb:0,sg:6},
  {id:"pnut",    name:"Peanuts",               unit:"g", basis:"raw",    kcal:567,p:26,c:16,f:49,fb:8.5,sg:4},
  {id:"almond",  name:"Almonds",               unit:"g", basis:"raw",    kcal:579,p:21,c:22,f:50,fb:12.5,sg:4},
@@ -134,8 +134,13 @@ const STARTER_FOODS = [
  {id:"capsicum",name:"Capsicum",              unit:"g", basis:"raw",    kcal:20,p:0.9,c:4.6,f:0.2,fb:1.7,sg:2.4},
  {id:"beetroot",name:"Beetroot",              unit:"g", basis:"raw",    kcal:43,p:1.6,c:10,f:0.2,fb:2.8,sg:6.8},
  /* --- dairy, fats, nuts, misc --- */
- {id:"fcmilk",  name:"Milk (full cream, 200ml)",unit:"cup",basis:"",    kcal:130,p:6.6,c:9.6,f:7,fb:0,sg:9.6},
- {id:"bmilk",   name:"Buttermilk (200ml)",    unit:"cup",basis:"",      kcal:30,p:1.5,c:3,f:1,fb:0,sg:3},
+ {id:"fcmilk",  name:"Milk (whole / full cream)",unit:"ml",basis:"",    kcal:65,p:3.3,c:4.8,f:3.5,fb:0,sg:4.8},
+ {id:"bmilk",   name:"Buttermilk / chaas",    unit:"ml",basis:"",       kcal:15,p:0.8,c:1.5,f:0.5,fb:0,sg:1.5},
+ {id:"wcream",  name:"Whipping cream (heavy)",unit:"ml",basis:"",       kcal:340,p:2,c:3,f:36,fb:0,sg:3},
+ {id:"soymilk", name:"Soy milk",              unit:"ml",basis:"",       kcal:40,p:3.3,c:1.8,f:1.8,fb:0.4,sg:1},
+ {id:"almmilk", name:"Almond milk",           unit:"ml",basis:"",       kcal:17,p:0.6,c:0.7,f:1.3,fb:0.3,sg:0.4},
+ {id:"lassi",   name:"Sweet lassi",           unit:"ml",basis:"",       kcal:100,p:2.6,c:13,f:3,fb:0,sg:12},
+ {id:"condmilk",name:"Condensed milk",        unit:"tbsp",basis:"",     kcal:62,p:1.5,c:10.4,f:1.7,fb:0,sg:10.4},
  {id:"cheese",  name:"Cheese slice",          unit:"pc",basis:"",       kcal:60,p:3.5,c:1,f:4.5,fb:0,sg:0.5},
  {id:"butter",  name:"Butter",                unit:"tsp",basis:"",      kcal:36,p:0,c:0,f:4,fb:0,sg:0},
  {id:"oil",     name:"Cooking oil",           unit:"tsp",basis:"",      kcal:40,p:0,c:0,f:4.5,fb:0,sg:0},
@@ -149,9 +154,19 @@ const STARTER_FOODS = [
  {id:"ketchup", name:"Ketchup",               unit:"tbsp",basis:"",     kcal:17,p:0.2,c:4.5,f:0,fb:0.1,sg:3.7},
  {id:"mayo",    name:"Mayonnaise",            unit:"tbsp",basis:"",     kcal:90,p:0.1,c:0.6,f:10,fb:0,sg:0.5},
  {id:"maggi",   name:"Maggi (1 pack)",        unit:"pc",basis:"",       kcal:280,p:6,c:40,f:11,fb:1.5,sg:1.5},
- {id:"softdrink",name:"Soft drink (250ml)",   unit:"cup",basis:"",      kcal:105,p:0,c:26,f:0,fb:0,sg:26},
- {id:"juice",   name:"Fruit juice (250ml)",   unit:"cup",basis:"",      kcal:110,p:1,c:26,f:0.2,fb:0.5,sg:22},
- {id:"cocwater",name:"Coconut water (250ml)", unit:"cup",basis:"",      kcal:45,p:0.5,c:9,f:0.2,fb:0,sg:9},
+ {id:"softdrink",name:"Soft drink / cola",    unit:"ml",basis:"",       kcal:42,p:0,c:10.6,f:0,fb:0,sg:10.6},
+ {id:"juice",   name:"Fruit juice (packaged)",unit:"ml",basis:"",       kcal:44,p:0.4,c:10.4,f:0.1,fb:0.2,sg:8.8},
+ {id:"cocwater",name:"Coconut water",         unit:"ml",basis:"",       kcal:18,p:0.2,c:3.6,f:0.1,fb:0,sg:3.6},
+ /* --- more dishes & extras --- */
+ {id:"chkeema", name:"Chicken keema",         unit:"g", basis:"cooked", kcal:180,p:17,c:3,f:11,fb:0.5,sg:1},
+ {id:"chilli_ch",name:"Chilli chicken",       unit:"g", basis:"cooked", kcal:190,p:16,c:8,f:10,fb:0.8,sg:3},
+ {id:"friedch", name:"Fried chicken",         unit:"g", basis:"cooked", kcal:290,p:17,c:8,f:20,fb:0.5,sg:0.5},
+ {id:"omelette",name:"Omelette (2 eggs + oil)",unit:"pc",basis:"",      kcal:220,p:13,c:2,f:17,fb:0.3,sg:1},
+ {id:"briceraw",name:"Brown rice (dry)",      unit:"g", basis:"raw",    kcal:370,p:7.5,c:77,f:2.9,fb:3.5,sg:0},
+ {id:"fries",   name:"French fries",          unit:"g", basis:"cooked", kcal:310,p:3.4,c:40,f:15,fb:3.8,sg:0.3},
+ {id:"icecream",name:"Ice cream",             unit:"g", basis:"raw",    kcal:210,p:3.5,c:24,f:11,fb:0.5,sg:21},
+ {id:"chocolate",name:"Chocolate (milk)",     unit:"g", basis:"raw",    kcal:545,p:5,c:60,f:31,fb:2,sg:52},
+ {id:"chips",   name:"Potato chips",          unit:"g", basis:"raw",    kcal:540,p:7,c:50,f:35,fb:3.5,sg:0.5},
 ];
 
 /* days: JS weekday numbers (0=Sun … 6=Sat) */
@@ -165,7 +180,7 @@ function DEFAULT_PLANS(){ return JSON.parse(JSON.stringify([
      night:[{foodId:"chbrc",qty:100},{foodId:"roti",qty:1},{foodId:"mveg",qty:150}] } },
  { id:"vwork", name:"Veg · Workout", days:[1],
    slots:{ pre:[],
-     bf:[{foodId:"whey",qty:30},{foodId:"milk",qty:1},{foodId:"banana",qty:100}],
+     bf:[{foodId:"whey",qty:30},{foodId:"milk",qty:200},{foodId:"banana",qty:100}],
      mid:[{foodId:"whey",qty:20},{foodId:"toast",qty:1}],
      lunch:[{foodId:"soy",qty:70},{foodId:"moongc",qty:150},{foodId:"brice",qty:100},{foodId:"mvego",qty:100}],
      eve:[{foodId:"curd",qty:150},{foodId:"apple",qty:100},{foodId:"whey",qty:15}],
@@ -179,7 +194,7 @@ function DEFAULT_PLANS(){ return JSON.parse(JSON.stringify([
      night:[{foodId:"chbrc",qty:100},{foodId:"roti",qty:1},{foodId:"mveg",qty:150}] } },
  { id:"vrest", name:"Veg · Rest", days:[2,6],
    slots:{ pre:[],
-     bf:[{foodId:"whey",qty:30},{foodId:"milk",qty:1},{foodId:"banana",qty:80}],
+     bf:[{foodId:"whey",qty:30},{foodId:"milk",qty:200},{foodId:"banana",qty:80}],
      mid:[{foodId:"toast",qty:1},{foodId:"pb",qty:1}],
      lunch:[{foodId:"soy",qty:60},{foodId:"moongc",qty:150},{foodId:"brice",qty:80},{foodId:"mvego",qty:100}],
      eve:[{foodId:"curd",qty:150},{foodId:"apple",qty:100},{foodId:"whey",qty:15}],
@@ -210,6 +225,18 @@ function migrate(d){
     const have=new Set((d.foods||[]).map(f=>f.id));
     for(const f of STARTER_FOODS) if(!have.has(f.id)) d.foods.push(f);
     d.v=3;
+  }
+  if(d.v < 4){ // liquids: cups → ml. Update defs, scale plan quantities.
+    const cupMl={milk:200,fcmilk:200,bmilk:200,softdrink:250,juice:250,cocwater:250};
+    for(const nf of STARTER_FOODS){
+      const i=d.foods.findIndex(f=>f.id===nf.id);
+      if(i>=0 && cupMl[nf.id]!==undefined) d.foods[i]=nf;
+    }
+    const have4=new Set(d.foods.map(f=>f.id));
+    for(const f of STARTER_FOODS) if(!have4.has(f.id)) d.foods.push(f);
+    for(const pl of (d.plans||[])) for(const s in (pl.slots||{}))
+      for(const pi of pl.slots[s]) if(cupMl[pi.foodId] && pi.qty<20) pi.qty=pi.qty*cupMl[pi.foodId];
+    d.v=4;
   }
   return d;
 }
@@ -257,18 +284,20 @@ function gradeOf(f){
   return "o";
 }
 function itemMacros(f, qty){
-  const mult = f.unit==="g" ? qty/100 : qty;
+  const mult = (f.unit==="g"||f.unit==="ml") ? qty/100 : qty;
   return { kcal:Math.round(f.kcal*mult), p:r1(f.p*mult), c:r1(f.c*mult),
            f:r1(f.f*mult), fb:r1((f.fb||0)*mult), sg:r1((f.sg||0)*mult),
            caf:(f.caf?qty:0) };
 }
 function qtyText(f,qty){
   if(f.unit==="g") return qty+"g"+(f.basis?" "+f.basis:"");
+  if(f.unit==="ml") return qty+"ml";
   return qty+" "+(UNITS[f.unit]||f.unit)+(qty>1?"s":"");
 }
 function qtyLabel(f){
   if(f.unit==="g") return f.basis==="cooked" ? "Grams (COOKED weight)"
                  : f.basis==="raw" ? "Grams (RAW / uncooked weight)" : "Grams";
+  if(f.unit==="ml") return "Milliliters (ml)";
   return "Number of " + (UNITS[f.unit]||f.unit) + "s";
 }
 
@@ -530,14 +559,14 @@ function renderFoodPicker(){
     <div class="food-row" onclick="pickFood('${f.id}')">
       <span class="dot ${gradeOf(f)}"></span><span class="f-name">${f.name}</span>
       ${f.unit==="g"&&f.basis?`<span class="basis-tag">${f.basis}</span>`:""}
-      <span class="f-info">${f.kcal} kcal / ${f.unit==="g"?"100g":UNITS[f.unit]}<br>${f.p}g P</span>
+      <span class="f-info">${f.kcal} kcal / ${f.unit==="g"?"100g":f.unit==="ml"?"100ml":UNITS[f.unit]}<br>${f.p}g P</span>
     </div>`).join("") || "<p class='muted'>No match. Add it in Foods → database.</p>";
 }
 function pickFood(id){
   pickedFood=food(id);
   $("qty-section").style.display="block";
   $("qty-label").textContent=qtyLabel(pickedFood);
-  $("qty-input").value = pickedFood.unit==="g" ? 100 : 1;
+  $("qty-input").value = (pickedFood.unit==="g"||pickedFood.unit==="ml") ? 100 : 1;
   updateQtyPreview();
   $("qty-input").oninput=updateQtyPreview;
 }
@@ -811,7 +840,7 @@ function renderDB(){
     <div class="food-row" onclick="editFood('${f.id}')">
       <span class="dot ${gradeOf(f)}"></span><span class="f-name">${f.name}</span>
       ${f.unit==="g"&&f.basis?`<span class="basis-tag">${f.basis}</span>`:""}
-      <span class="f-info">${f.kcal} kcal / ${f.unit==="g"?"100g":UNITS[f.unit]}<br>${f.p}P ${f.c}C ${f.f}F</span>
+      <span class="f-info">${f.kcal} kcal / ${f.unit==="g"?"100g":f.unit==="ml"?"100ml":UNITS[f.unit]}<br>${f.p}P ${f.c}C ${f.f}F</span>
     </div>`).join("");
 }
 function editFood(id){
@@ -830,7 +859,7 @@ function editFood(id){
         <option value="cooked" ${f.basis==="cooked"?"selected":""}>cooked</option>
       </select></div>
     </div>
-    <p class="muted" style="margin:8px 0 0">Macros per <b>100 g</b> (if grams) or per <b>1 unit</b> otherwise.</p>
+    <p class="muted" style="margin:8px 0 0">Macros per <b>100 g</b> (grams), per <b>100 ml</b> (ml), or per <b>1 unit</b> otherwise.</p>
     <div class="grid2">
       <div><label>Calories</label><input id="ef-kcal" type="number" value="${f.kcal}"></div>
       <div><label>Protein g</label><input id="ef-p" type="number" step="0.1" value="${f.p}"></div>
