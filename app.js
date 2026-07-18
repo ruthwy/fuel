@@ -312,10 +312,11 @@ function targets(){
   const w = latestWeight();
   let bmr = 10*w + 6.25*p.heightCm - 5*p.age + (p.gender==="male" ? 5 : -161);
   let tdee = bmr * p.activity;
-  // Health-driven mode: real measured active energy instead of activity multiplier
+  // Health-driven mode: real measured energy instead of activity multiplier
   const hd = (D.days[todayKey()]||{}).health;
-  if(p.useHealthEnergy && hd && hd.activeKcal!=null)
-    tdee = bmr*1.25 + hd.activeKcal;   // 1.25 ≈ sedentary baseline (NEAT/TEF), + measured activity
+  if(p.useHealthEnergy && hd && hd.activeKcal!=null){
+    tdee = (hd.restingKcal!=null ? hd.restingKcal : bmr*1.25) + hd.activeKcal;
+  }
   const now = fromKey(todayKey()), end = fromKey(p.targetDate);
   const daysLeft = Math.max(7,(end-now)/864e5);
   let rate = (p.targetWeight - w)/(daysLeft/7);          // kg per week
@@ -621,7 +622,64 @@ function renderTrends(){
       <b style="color:var(--${onTrack?"good":"bad"})">${onTrack?"✓ On track":"⚠ Behind "+Math.abs(diff)+" kg"}</b></div>
     <div class="stat-row"><span>Adaptive targets</span><b>${T.kcal} kcal · ${T.protein}g protein</b></div>
     <div class="muted" style="margin-top:6px">Targets recalculate from your latest weight & time left — they tighten or relax automatically as you go.</div>`;
+  renderEnergy();
   drawWeightChart(); drawBars("kcal-chart","kcal",T.kcal); drawBars("protein-chart","p",T.protein,true);
+}
+/* ---------- energy balance: how resting / active / food drive fat loss ---------- */
+function renderEnergy(){
+  const p=D.profile; if(!p) return;
+  const w=latestWeight();
+  const bmrEst=Math.round(10*w + 6.25*p.heightCm - 5*p.age + (p.gender==="male"?5:-161));
+  let n=0,sumRest=0,sumAct=0,sumSteps=0,stepN=0,sumIn=0,inN=0,sumDef=0,defN=0,healthDays=0,restReal=0;
+  for(let i=13;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=todayKey(d), dd=D.days[k]||{}, hd=dd.health, tot=dayTotals(k);
+    if(hd) healthDays++;
+    const rest=(hd&&hd.restingKcal!=null)?hd.restingKcal:bmrEst;
+    if(hd&&hd.restingKcal!=null) restReal++;
+    const act=(hd&&hd.activeKcal!=null)?hd.activeKcal:null;
+    if(act==null && !tot.logged) continue;
+    const out=rest+(act||0);
+    n++; sumRest+=rest; sumAct+=(act||0);
+    if(hd&&hd.steps!=null){ sumSteps+=hd.steps; stepN++; }
+    if(tot.logged){ sumIn+=tot.kcal; inN++; sumDef+=out-tot.kcal; defN++; }
+  }
+  const el=$("energy-card");
+  if(!healthDays){
+    el.innerHTML=`<b>Energy balance</b>
+      <p class="muted" style="margin:8px 0 12px">Import Apple Health (steps, active + resting energy) to see exactly what's driving your fat loss — and which lever to pull.</p>
+      <button class="btn full" onclick="importHealth()">Import from Health</button>`;
+    return;
+  }
+  const rest=Math.round(sumRest/Math.max(1,n)), act=Math.round(sumAct/Math.max(1,n));
+  const out=rest+act, eaten=inN?Math.round(sumIn/inN):null;
+  const deficit=defN?Math.round(sumDef/defN):null;
+  const steps=stepN?Math.round(sumSteps/stepN):null;
+  const restPct=Math.round(rest*100/Math.max(1,out)), actPct=100-restPct;
+  const maxScale=Math.max(out,eaten||0,1);
+  const kgWk=deficit!=null?deficit*7/7700:null;
+  el.innerHTML=`
+    <div class="stat-row"><b>Energy balance · fat-loss drivers</b><span class="muted">14-day avg</span></div>
+    <div class="stat-row" style="margin-top:12px"><span>Burned</span><b>${out} kcal/day</b></div>
+    <div class="ebar">
+      <div class="seg" style="width:${(rest/maxScale*100).toFixed(1)}%;background:var(--accent)"></div>
+      <div class="seg" style="width:${(act/maxScale*100).toFixed(1)}%;background:var(--good)"></div>
+    </div>
+    <div class="stat-row"><span>Eaten</span><b>${eaten!=null?eaten+" kcal/day":"— log food to compare"}</b></div>
+    <div class="ebar"><div class="seg" style="width:${eaten!=null?(eaten/maxScale*100).toFixed(1):0}%;background:var(--ring1)"></div></div>
+    <div class="slot-item"><span class="dot" style="background:var(--accent)"></span>
+      <span class="i-name">Resting energy${restReal?"":" (estimated)"}
+        <div class="muted" style="font-size:11px">idle burn — grows with muscle, shrinks as you lose weight</div></span>
+      <span class="i-macro">${rest} kcal<br>${restPct}% of burn</span></div>
+    <div class="slot-item"><span class="dot" style="background:var(--good)"></span>
+      <span class="i-name">Active energy
+        <div class="muted" style="font-size:11px">${steps!=null?"~"+steps.toLocaleString()+" steps/day · ":""}your most controllable lever</div></span>
+      <span class="i-macro">${act} kcal<br>${actPct}% of burn</span></div>
+    ${deficit!=null?`<div class="slot-item"><span class="dot ${deficit>0?"g":"b"}"></span>
+      <span class="i-name">Daily ${deficit>0?"deficit":"surplus"}
+        <div class="muted" style="font-size:11px">burned − eaten · this is what actually moves the scale</div></span>
+      <span class="i-macro"><b style="color:var(--${deficit>0?"good":"bad"})">${deficit>0?"−":"+"}${Math.abs(deficit)} kcal</b><br>≈ ${Math.abs(kgWk).toFixed(2)} kg/wk ${deficit>0?"loss":"gain"}</span></div>`:""}
+    <p class="muted" style="margin:10px 0 0">Rules of thumb: +1,000 steps/day ≈ 35 kcal ≈ 0.25 kg extra loss over 2 months. A steady 500 kcal deficit ≈ 0.45 kg/week.</p>`;
 }
 function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 function hexA(hex,a){
@@ -631,128 +689,88 @@ function hexA(hex,a){
   const n=parseInt(hex.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
   return `rgba(${r},${g},${b},${a})`;
 }
-function smoothPath(x,pts){ // Catmull-Rom → bezier, buttery curves
-  x.moveTo(pts[0].x,pts[0].y);
+function svgSmooth(pts){ // Catmull-Rom → cubic bezier path string
+  if(!pts.length) return "";
+  let d="M"+pts[0].x.toFixed(1)+" "+pts[0].y.toFixed(1);
   for(let i=0;i<pts.length-1;i++){
     const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(pts.length-1,i+2)];
-    x.bezierCurveTo(p1.x+(p2.x-p0.x)/6, p1.y+(p2.y-p0.y)/6,
-                    p2.x-(p3.x-p1.x)/6, p2.y-(p3.y-p1.y)/6, p2.x, p2.y);
+    d+=" C"+(p1.x+(p2.x-p0.x)/6).toFixed(1)+" "+(p1.y+(p2.y-p0.y)/6).toFixed(1)
+      +" "+(p2.x-(p3.x-p1.x)/6).toFixed(1)+" "+(p2.y-(p3.y-p1.y)/6).toFixed(1)
+      +" "+p2.x.toFixed(1)+" "+p2.y.toFixed(1);
   }
-}
-function animateChart(canvas,draw,dur){
-  const tok=canvas._tok=(canvas._tok||0)+1;
-  const t0=performance.now();
-  function step(now){
-    if(canvas._tok!==tok) return;
-    const raw=Math.min(1,(now-t0)/dur);
-    draw(1-Math.pow(1-raw,3));
-    if(raw<1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-function setupCanvas(id){
-  const c=$(id), dpr=window.devicePixelRatio||1;
-  const w=c.clientWidth||320, h=+c.getAttribute("height");
-  c.width=w*dpr; c.height=h*dpr;
-  const x=c.getContext("2d"); x.scale(dpr,dpr);
-  x.clearRect(0,0,w,h);
-  return {x,w,h};
+  return d;
 }
 function drawWeightChart(){
-  const c=$("weight-chart");
-  const {x,w,h}=setupCanvas("weight-chart");
   const p=D.profile;
   const raw=D.weights.length?D.weights:[{date:p.startDate,kg:p.startWeight}];
+  const W=360,H=210,L=34,R=12,T=14,B=24;
   const start=fromKey(p.startDate), end=fromKey(p.targetDate);
   const allW=[...raw.map(q=>q.kg),p.startWeight,p.targetWeight];
   const minW=Math.min(...allW)-0.8, maxW=Math.max(...allW)+0.8;
-  const L=34,R=14,T=14,B=22;
-  const X=d=>L+clamp((fromKey(d)-start)/(end-start),0,1)*(w-L-R);
-  const Y=v=>T+(maxW-v)/(maxW-minW)*(h-T-B);
+  const X=d=>L+clamp((fromKey(d)-start)/(end-start),0,1)*(W-L-R);
+  const Y=v=>T+(maxW-v)/(maxW-minW)*(H-T-B);
   const pts=raw.map(q=>({x:X(q.date),y:Y(q.kg)}));
-  const cDim=cssVar("--dim"), cHair=cssVar("--hairline"), cAcc=cssVar("--accent"), cCard=cssVar("--card");
-  animateChart(c,t=>{
-    x.clearRect(0,0,w,h);
-    // minimal grid
-    x.font="600 10px -apple-system,sans-serif"; x.textAlign="left";
-    for(let i=0;i<=3;i++){
-      const v=minW+(maxW-minW)*(3-i)/3, gy=Y(v);
-      x.strokeStyle=cHair; x.beginPath(); x.moveTo(L,gy); x.lineTo(w-R,gy); x.stroke();
-      x.fillStyle=cDim; x.fillText(v.toFixed(1),4,gy+3);
-    }
-    // target path — quiet dashed guide
-    x.save(); x.globalAlpha=0.55; x.strokeStyle=cDim; x.lineWidth=1.5; x.setLineDash([4,5]);
-    x.beginPath(); x.moveTo(X(p.startDate),Y(p.startWeight)); x.lineTo(X(p.targetDate),Y(p.targetWeight));
-    x.stroke(); x.restore();
-    // clip for draw-in sweep
-    x.save();
-    x.beginPath(); x.rect(0,0,L+(w-L-R)*t+2,h); x.clip();
-    if(pts.length>1){
-      // gradient area fill
-      const grad=x.createLinearGradient(0,T,0,h-B);
-      grad.addColorStop(0,hexA(cAcc,0.26)); grad.addColorStop(1,hexA(cAcc,0));
-      x.beginPath(); smoothPath(x,pts);
-      x.lineTo(pts[pts.length-1].x,h-B); x.lineTo(pts[0].x,h-B); x.closePath();
-      x.fillStyle=grad; x.fill();
-      // glowing line
-      x.beginPath(); smoothPath(x,pts);
-      x.strokeStyle=cAcc; x.lineWidth=2.5; x.lineJoin="round"; x.lineCap="round";
-      x.shadowColor=hexA(cAcc,0.45); x.shadowBlur=10;
-      x.stroke(); x.shadowBlur=0;
-    }
-    x.restore();
-    // endpoint dot with halo
-    if(t>0.97 && pts.length){
-      const lp=pts[pts.length-1];
-      x.beginPath(); x.arc(lp.x,lp.y,9,0,7); x.fillStyle=hexA(cAcc,0.18); x.fill();
-      x.beginPath(); x.arc(lp.x,lp.y,4.5,0,7); x.fillStyle=cAcc; x.fill();
-      x.beginPath(); x.arc(lp.x,lp.y,2,0,7); x.fillStyle=cCard; x.fill();
-    }
-  },900);
+  let grid="";
+  for(let i=0;i<=3;i++){
+    const v=minW+(maxW-minW)*(3-i)/3, gy=Y(v).toFixed(1);
+    grid+=`<line x1="${L}" y1="${gy}" x2="${W-R}" y2="${gy}" stroke="var(--hairline)"/>
+           <text x="4" y="${(+gy+3).toFixed(1)}">${v.toFixed(1)}</text>`;
+  }
+  const line=svgSmooth(pts);
+  const area=pts.length>1
+    ? line+` L${pts[pts.length-1].x.toFixed(1)} ${H-B} L${pts[0].x.toFixed(1)} ${H-B} Z` : "";
+  const lp=pts[pts.length-1];
+  $("weight-chart").innerHTML=`
+  <svg viewBox="0 0 ${W} ${H}">
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--accent)" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="var(--accent)" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${grid}
+    <line x1="${X(p.startDate).toFixed(1)}" y1="${Y(p.startWeight).toFixed(1)}"
+      x2="${X(p.targetDate).toFixed(1)}" y2="${Y(p.targetWeight).toFixed(1)}"
+      stroke="var(--dim)" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.55"/>
+    ${area?`<path class="warea" d="${area}" fill="url(#wg)"/>`:""}
+    ${pts.length>1?`<path class="wline" d="${line}" fill="none" stroke="var(--accent)"
+      stroke-width="2.5" stroke-linecap="round" pathLength="1"/>`:""}
+    <g class="wdot">
+      <circle cx="${lp.x.toFixed(1)}" cy="${lp.y.toFixed(1)}" r="9" fill="var(--accent)" opacity="0.18"/>
+      <circle cx="${lp.x.toFixed(1)}" cy="${lp.y.toFixed(1)}" r="4.5" fill="var(--accent)"/>
+      <circle cx="${lp.x.toFixed(1)}" cy="${lp.y.toFixed(1)}" r="2" fill="var(--card)"/>
+    </g>
+  </svg>`;
 }
 function drawBars(id,fieldName,target,underBad){
-  const c=$(id);
-  const {x,w,h}=setupCanvas(id);
+  const W=360,H=175,L=16,R=10,T=14,B=26;
   const days=[];
   for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i);
     const k=todayKey(d);
-    days.push({k,v:dayTotals(k)[fieldName]||0,wd:"SMTWTFS"[fromKey(k).getDay()],today:i===0}); }
-  const cGood=cssVar("--good"), cOk=cssVar("--ok"), cBad=cssVar("--bad"),
-        cDim=cssVar("--dim"), cText=cssVar("--text"), cTrack=cssVar("--card2");
+    days.push({v:dayTotals(k)[fieldName]||0,wd:"SMTWTFS"[fromKey(k).getDay()],today:i===0}); }
   const maxV=Math.max(target*1.3,...days.map(d=>d.v));
-  const L=14,R=10,T=14,B=26;
-  const areaH=h-T-B, bw=(w-L-R)/14, capW=Math.min(bw-7,14), rad=capW/2;
-  const ty=T+(maxV-target)/maxV*areaH;
-  animateChart(c,t=>{
-    x.clearRect(0,0,w,h);
-    days.forEach((d,i)=>{
-      const cx=L+i*bw+bw/2;
-      // ghost track capsule
-      x.fillStyle=cTrack;
-      x.beginPath(); x.roundRect(cx-capW/2,T,capW,areaH,rad); x.fill();
-      // weekday label
-      x.fillStyle=d.today?cText:cDim; x.font=(d.today?"800":"600")+" 9px -apple-system,sans-serif";
-      x.textAlign="center"; x.fillText(d.wd,cx,h-9);
-      if(!d.v) return;
-      let col;
-      if(underBad) col = d.v>=target*0.9?cGood:d.v>=target*0.6?cOk:cBad;
-      else col = d.v<=target*1.02?cGood:d.v<=target*1.12?cOk:cBad;
-      const bh=Math.max(capW,(d.v/maxV)*areaH*t);
-      const by=T+areaH-bh;
-      const grad=x.createLinearGradient(0,by,0,T+areaH);
-      grad.addColorStop(0,col); grad.addColorStop(1,hexA(col,0.55));
-      x.fillStyle=grad;
-      x.beginPath(); x.roundRect(cx-capW/2,by,capW,bh,rad); x.fill();
-    });
-    // goal line + chip
-    x.save(); x.globalAlpha=0.65; x.strokeStyle=cText; x.lineWidth=1.2; x.setLineDash([3,4]);
-    x.beginPath(); x.moveTo(L-4,ty); x.lineTo(w-R,ty); x.stroke(); x.restore();
-    const lbl=Math.round(target)+(underBad?"g":"");
-    x.font="700 9px -apple-system,sans-serif";
-    const tw=x.measureText(lbl).width+10;
-    x.fillStyle=cTrack; x.beginPath(); x.roundRect(L-4,ty-16,tw,13,6.5); x.fill();
-    x.fillStyle=cDim; x.textAlign="left"; x.fillText(lbl,L+1,ty-6);
-  },850);
+  const areaH=H-T-B, bw=(W-L-R)/14, capW=Math.min(bw-7,13), rad=capW/2;
+  const ty=(T+(maxV-target)/maxV*areaH).toFixed(1);
+  let bars="";
+  days.forEach((d,i)=>{
+    const cx=L+i*bw+bw/2;
+    bars+=`<rect x="${(cx-capW/2).toFixed(1)}" y="${T}" width="${capW}" height="${areaH}" rx="${rad}" fill="var(--card2)"/>
+      <text x="${cx.toFixed(1)}" y="${H-9}" text-anchor="middle"${d.today?' style="fill:var(--text);font-weight:800"':""}>${d.wd}</text>`;
+    if(!d.v) return;
+    let col;
+    if(underBad) col = d.v>=target*0.9?"var(--good)":d.v>=target*0.6?"var(--ok)":"var(--bad)";
+    else col = d.v<=target*1.02?"var(--good)":d.v<=target*1.12?"var(--ok)":"var(--bad)";
+    const bh=Math.max(capW,d.v/maxV*areaH);
+    bars+=`<rect class="bar-v" style="animation-delay:${(i*0.03).toFixed(2)}s"
+      x="${(cx-capW/2).toFixed(1)}" y="${(T+areaH-bh).toFixed(1)}"
+      width="${capW}" height="${bh.toFixed(1)}" rx="${rad}" fill="${col}"/>`;
+  });
+  const lbl=Math.round(target)+(underBad?"g":"");
+  $(id).innerHTML=`<svg viewBox="0 0 ${W} ${H}">
+    ${bars}
+    <line x1="${L-4}" y1="${ty}" x2="${W-R}" y2="${ty}" stroke="var(--text)" opacity="0.55"
+      stroke-width="1.2" stroke-dasharray="3 4"/>
+    <rect x="${L-4}" y="${(+ty-16).toFixed(1)}" width="${lbl.length*6+12}" height="13" rx="6.5" fill="var(--card2)"/>
+    <text x="${L+2}" y="${(+ty-6).toFixed(1)}">${lbl}</text>
+  </svg>`;
 }
 
 /* ---------- FOODS / PLAN ---------- */
@@ -1145,15 +1163,23 @@ $("chat-text")?.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendChat(); }});
 
 /* ---------- Apple Health via Shortcuts ---------- */
+function cleanNum(v){ // "70 kg" → 70, "12,400" → 12400
+  if(v==null) return null;
+  const n=parseFloat(String(v).replace(/,/g,"").replace(/[^\d.\-]/g,""));
+  return isNaN(n)?null:n;
+}
 function applyHealthData(h){
   const k = h.date || todayKey();
   const d = day(k);
   d.health = d.health || {};
-  if(h.steps!=null)      d.health.steps = Math.round(+h.steps);
-  if(h.activeKcal!=null) d.health.activeKcal = Math.round(+h.activeKcal);
+  const steps=cleanNum(h.steps), act=cleanNum(h.activeKcal),
+        restK=cleanNum(h.restingKcal), wkg=cleanNum(h.weightKg);
+  if(steps!=null) d.health.steps = Math.round(steps);
+  if(act!=null)   d.health.activeKcal = Math.round(act);
+  if(restK!=null&&restK>300) d.health.restingKcal = Math.round(restK);
   let msg=[];
-  if(h.weightKg!=null && +h.weightKg>20){
-    const kg=r1(+h.weightKg);
+  if(wkg!=null && wkg>20){
+    const kg=r1(wkg);
     const ex=D.weights.find(w=>w.date===k);
     if(ex) ex.kg=kg; else D.weights.push({date:k,kg});
     D.weights.sort((a,b)=>a.date<b.date?-1:1);
@@ -1161,6 +1187,7 @@ function applyHealthData(h){
   }
   if(d.health.steps!=null) msg.push(d.health.steps.toLocaleString()+" steps");
   if(d.health.activeKcal!=null) msg.push(d.health.activeKcal+" active kcal");
+  if(d.health.restingKcal!=null) msg.push(d.health.restingKcal+" resting kcal");
   save(); renderToday();
   toast(msg.length?("Imported: "+msg.join(", ")+" ✓"):"Nothing to import");
 }
