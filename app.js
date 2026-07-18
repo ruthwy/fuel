@@ -362,7 +362,7 @@ function go(page){
   $("nav-"+page).classList.add("active");
   if(page==="today") renderToday();
   if(page==="trends") renderTrends();
-  if(page==="foods") { renderPlan(); renderDB(); }
+  if(page==="foods") { renderPrep(); renderPlan(); renderDB(); }
   if(page==="chat") renderChat();
   if(page==="profile") renderProfile();
 }
@@ -757,10 +757,44 @@ function drawBars(id,fieldName,target,underBad){
 
 /* ---------- FOODS / PLAN ---------- */
 function foodsTab(which){
-  $("tab-plan").classList.toggle("active",which==="plan");
-  $("tab-db").classList.toggle("active",which==="db");
-  $("plan-editor").style.display=which==="plan"?"block":"none";
-  $("db-editor").style.display=which==="db"?"block":"none";
+  const tabs={prep:"prep-list", plan:"plan-editor", db:"db-editor"};
+  for(const t in tabs){
+    $("tab-"+t).classList.toggle("active",t===which);
+    $(tabs[t]).style.display=t===which?"block":"none";
+  }
+}
+/* ---------- day prep list: everything to get ready for today ---------- */
+function renderPrep(){
+  const pl=planForDate(todayKey());
+  const agg={};
+  for(const s of SLOTS) for(const pi of ((pl.slots||{})[s.key]||[])){
+    const f=food(pi.foodId); if(!f) continue;
+    if(!agg[f.id]) agg[f.id]={f,qty:0,slots:[],p:0,kcal:0};
+    const m=itemMacros(f,pi.qty);
+    agg[f.id].qty+=pi.qty; agg[f.id].p+=m.p; agg[f.id].kcal+=m.kcal;
+    agg[f.id].slots.push(SLOTS.find(x=>x.key===s.key).name);
+  }
+  const items=Object.values(agg);
+  const isProt=a=>(a.f.p*4*100/Math.max(1,a.f.kcal)>=25)||a.p>=8;
+  const prot=items.filter(isProt).sort((a,b)=>b.p-a.p);
+  const rest=items.filter(a=>!isProt(a)).sort((a,b)=>b.kcal-a.kcal);
+  const totP=r1(items.reduce((x,a)=>x+a.p,0));
+  const totK=Math.round(items.reduce((x,a)=>x+a.kcal,0));
+  const row=a=>`<div class="slot-item"><span class="dot ${gradeOf(a.f)}"></span>
+    <span class="i-name">${a.f.name}
+      <div class="muted" style="font-size:11px">${[...new Set(a.slots)].join(" · ")}</div></span>
+    <span class="i-qty">${qtyText(a.f,r1(a.qty))}</span>
+    <span class="i-macro" style="min-width:64px">${r1(a.p)}g P<br>${a.kcal} kcal</span></div>`;
+  $("prep-list").innerHTML=`
+    <div class="card">
+      <div class="stat-row"><b>Today · ${pl.name}</b>
+        <span class="muted">${totK} kcal · ${totP}g protein</span></div>
+      <div class="muted">Combined across all meals — weigh out or thaw these once, cook through the day.</div>
+    </div>
+    <div class="section-title">Protein — get these ready</div>
+    <div class="card">${prot.map(row).join("")||"<p class='muted'>Nothing planned.</p>"}</div>
+    <div class="section-title">Carbs, veg &amp; others</div>
+    <div class="card">${rest.map(row).join("")||"<p class='muted'>Nothing planned.</p>"}</div>`;
 }
 let selPlanId=null;
 const WD=["Su","Mo","Tu","We","Th","Fr","Sa"];

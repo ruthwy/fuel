@@ -297,10 +297,12 @@ hr{border:none;border-top:0.5px solid var(--hairline);margin:14px -16px;padding:
 <div class="page" id="page-foods">
   <div class="topbar"><h1>Foods</h1></div>
   <div class="pill-row">
-    <button class="pill active" id="tab-plan" onclick="foodsTab('plan')">Meal plans</button>
+    <button class="pill active" id="tab-prep" onclick="foodsTab('prep')">Day prep</button>
+    <button class="pill" id="tab-plan" onclick="foodsTab('plan')">Meal plans</button>
     <button class="pill" id="tab-db" onclick="foodsTab('db')">Database</button>
   </div>
-  <div id="plan-editor"></div>
+  <div id="prep-list"></div>
+  <div id="plan-editor" style="display:none"></div>
   <div id="db-editor" style="display:none">
     <input id="db-search" placeholder="Search foods…" oninput="renderDB()" style="margin-bottom:12px">
     <button class="btn full" style="margin-bottom:12px" onclick="editFood(null)">
