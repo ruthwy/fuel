@@ -133,8 +133,8 @@ function todayKey(d){ const t = d||new Date();
 function fromKey(k){ const [y,m,d]=k.split("-").map(Number); return new Date(y,m-1,d); }
 function clamp(x,a,b){ return Math.min(b,Math.max(a,x)); }
 function r1(x){ return Math.round(x*10)/10; }
-function toast(msg){ const t=$("toast"); t.textContent=msg; t.style.display="block";
-  clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none",2200); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
 function day(k){ k=k||viewDate;
   if(!D.days[k]) D.days[k]={meals:{},water:0};
   return D.days[k]; }
@@ -254,17 +254,42 @@ function renderToday(){
   let html="";
   if(!T){ html="<p class='muted'>Set up your profile first → Profile tab.</p>"; }
   else{
-    const rows=[ ["Calories", Math.round(tot.kcal), T.kcal, "kcal", true],
-                 ["Protein",  r1(tot.p), T.protein, "g", false],
-                 ["Carbs",    r1(tot.c), T.carbs, "g", true],
-                 ["Fat",      r1(tot.f), T.fat, "g", true] ];
-    for(const [name,val,tar,unit,overBad] of rows){
+    const wtr=waterTarget(viewDate), drank=day(viewDate).water||0;
+    // Apple Fitness-style concentric rings: calories / protein / water
+    const ringDefs=[
+      {pct:tot.kcal/Math.max(1,T.kcal),      color:"var(--ring1)"},
+      {pct:tot.p/Math.max(1,T.protein),      color:"var(--good)"},
+      {pct:drank/Math.max(1,wtr.glasses),    color:"var(--water)"},
+    ];
+    const radii=[52,40,28];
+    let ringsSvg=`<svg class="rings" viewBox="0 0 120 120">`;
+    ringDefs.forEach((d,i)=>{
+      const r=radii[i], C=(2*Math.PI*r).toFixed(1);
+      ringsSvg+=`<circle cx="60" cy="60" r="${r}" fill="none" stroke="${d.color}" stroke-opacity="0.15" stroke-width="10"/>
+        <circle class="ring" cx="60" cy="60" r="${r}" fill="none" stroke="${d.color}" stroke-width="10"
+          stroke-linecap="round" transform="rotate(-90 60 60)"
+          stroke-dasharray="${C}" stroke-dashoffset="${C}"
+          data-off="${(C*(1-Math.min(1,d.pct))).toFixed(1)}"/>`;
+    });
+    ringsSvg+=`</svg>`;
+    html+=`<div class="summary-top">${ringsSvg}
+      <div class="summary-legend">
+        <div class="leg-row"><span class="leg-dot" style="background:var(--ring1)"></span>
+          <div><div class="leg-val">${Math.round(tot.kcal)}<small> / ${T.kcal} kcal</small></div>
+          <div class="leg-name">Calories · ${Math.max(0,T.kcal-Math.round(tot.kcal))} left</div></div></div>
+        <div class="leg-row"><span class="leg-dot" style="background:var(--good)"></span>
+          <div><div class="leg-val">${r1(tot.p)}<small> / ${T.protein} g</small></div>
+          <div class="leg-name">Protein</div></div></div>
+        <div class="leg-row"><span class="leg-dot" style="background:var(--water)"></span>
+          <div><div class="leg-val">${(drank*0.25).toFixed(2)}<small> / ${(wtr.glasses*0.25).toFixed(2)} L</small></div>
+          <div class="leg-name">Water</div></div></div>
+      </div></div>`;
+    for(const [name,val,tar,overBad] of [["Carbs",r1(tot.c),T.carbs,true],["Fat",r1(tot.f),T.fat,true]]){
       const pct=clamp(val/Math.max(1,tar)*100,0,100);
-      html+=`<div class="stat-row"><span>${name}</span><b>${val} / ${tar} ${unit}</b></div>
-             <div class="bar"><div class="${barClass(val,tar,overBad)}" style="width:${pct}%"></div></div>`;
+      html+=`<div class="stat-row"><span>${name}</span><b>${val} / ${tar} g</b></div>
+             <div class="bar"><div class="${barClass(val,tar,overBad)}" style="width:0%" data-w="${pct.toFixed(1)}"></div></div>`;
     }
-    html+=`<div class="stat-row muted"><span>Fiber ${r1(tot.fb)} g · Sugar ${r1(tot.sg)} g</span>
-           <span>${T.kcal-Math.round(tot.kcal)} kcal left</span></div>`;
+    html+=`<div class="stat-row muted"><span>Fiber ${r1(tot.fb)} g · Sugar ${r1(tot.sg)} g</span></div>`;
     const hd=day(viewDate).health;
     if(hd) html+=`<div class="stat-row muted" style="margin-top:6px">
       <span>❤️ Health: ${hd.steps!=null?hd.steps.toLocaleString()+" steps":""}${hd.activeKcal!=null?" · 🔥 "+Math.round(hd.activeKcal)+" active kcal":""}</span>
@@ -278,8 +303,8 @@ function renderToday(){
     const sd=slotData(viewDate,s.key);
     const kcal=sd.items.reduce((a,i)=>a+i.kcal,0);
     const done=sd.items.length>0, skipped=sd.skipped&&!done;
-    const check = done?`<div class="check done">✓</div>`
-                : skipped?`<div class="check skip">—</div>`:`<div class="check"></div>`;
+    const check = done?`<div class="check done"><svg viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L19.5 7"/></svg></div>`
+                : skipped?`<div class="check skip"></div>`:`<div class="check"></div>`;
     let items="";
     for(let i=0;i<sd.items.length;i++){
       const it=sd.items[i];
@@ -293,27 +318,37 @@ function renderToday(){
       <div class="slot-head" onclick="toggleSlot('${s.key}')">
         ${check}<span class="s-name">${s.name}</span>
         <span class="s-kcal">${done?kcal+" kcal":skipped?"skipped":""}</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M9 5.5l7 6.5-7 6.5"/></svg>
       </div>
-      <div class="slot-body">${items}
+      <div class="slot-body"><div class="sb-in">${items}
         <div class="slot-actions">
           ${hasPlan?`<button class="btn good" onclick="usePlan('${s.key}')">✓ Use plan</button>`:""}
-          <button class="btn" onclick="openPicker('slot','${s.key}')">+ Add food</button>
+          <button class="btn" onclick="openPicker('slot','${s.key}')">＋ Add food</button>
           <button class="btn" onclick="toggleSkip('${s.key}')">${skipped?"Unskip":"Skip"}</button>
-        </div></div></div>`;
+        </div></div></div></div>`;
   }
   $("slots").innerHTML=sh;
 
   // water
-  const wt=waterTarget(viewDate), drank=day(viewDate).water||0;
+  const wt=waterTarget(viewDate), drankW=day(viewDate).water||0;
   let wg="";
   for(let i=0;i<wt.glasses;i++){
-    wg+=`<div class="glass ${i<drank?"full":""} ${i>=wt.base?"bonus":""}" onclick="tapGlass(${i})">${(i+1)*250>=1000? r1((i+1)*0.25)+"L":""}</div>`;
+    wg+=`<div class="glass ${i<drankW?"full":""} ${i>=wt.base?"bonus":""}" onclick="tapGlass(${i})">${(i+1)*250>=1000? r1((i+1)*0.25)+"L":""}</div>`;
   }
   $("water-card").innerHTML=`
-    <div class="stat-row"><span>💧 Water</span>
-    <b>${(drank*0.25).toFixed(2)} / ${(wt.glasses*0.25).toFixed(2)} L</b></div>
+    <div class="stat-row"><span style="color:var(--water);font-weight:600">Water</span>
+    <b id="water-count">${(drankW*0.25).toFixed(2)} / ${(wt.glasses*0.25).toFixed(2)} L</b></div>
     <div class="muted">${wt.bonus?[wt.cafBonus?`+${wt.cafBonus} for caffeine`:"",wt.actBonus?`+${wt.actBonus} for activity`:""].filter(Boolean).join(" · "):"Base target from your weight"}</div>
-    <div class="water-glasses">${wg}</div>`;
+    <div class="water-glasses" id="water-glasses">${wg}</div>`;
+  animateProgress();
+}
+function animateProgress(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll("#summary-card .bar > div[data-w]")
+      .forEach(el=>el.style.width=el.dataset.w+"%");
+    document.querySelectorAll("#summary-card .ring")
+      .forEach(el=>el.setAttribute("stroke-dashoffset",el.dataset.off));
+  }));
 }
 function toggleSlot(key){ $("slot-"+key).classList.toggle("open"); }
 function toggleSkip(key){ const sd=slotData(viewDate,key); sd.skipped=!sd.skipped; save(); renderToday(); keepOpen(key); }
@@ -331,9 +366,21 @@ function usePlan(slot){
   toast(planForDate(viewDate).name+" plan logged ✓");
 }
 function tapGlass(i){
+  // patch DOM in place so fills animate instead of re-rendering everything
   const d=day(viewDate);
   d.water = (d.water===i+1) ? i : i+1;
-  save(); renderToday();
+  save();
+  const wt=waterTarget(viewDate), drank=d.water||0;
+  document.querySelectorAll("#water-glasses .glass")
+    .forEach((g,idx)=>g.classList.toggle("full",idx<drank));
+  const wc=$("water-count");
+  if(wc) wc.textContent=(drank*0.25).toFixed(2)+" / "+(wt.glasses*0.25).toFixed(2)+" L";
+  const rings=document.querySelectorAll("#summary-card .ring");
+  if(rings[2]){ const C=2*Math.PI*28;
+    rings[2].setAttribute("stroke-dashoffset",
+      (C*(1-Math.min(1,drank/Math.max(1,wt.glasses)))).toFixed(1)); }
+  const legs=document.querySelectorAll("#summary-card .leg-val");
+  if(legs[2]) legs[2].innerHTML=(drank*0.25).toFixed(2)+"<small> / "+(wt.glasses*0.25).toFixed(2)+" L</small>";
 }
 
 /* ---------- food picker ---------- */
