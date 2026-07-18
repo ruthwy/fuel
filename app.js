@@ -1193,14 +1193,26 @@ function applyHealthData(h){
 }
 async function importHealth(){
   // Data arrives from the "Fuel Import" iPhone Shortcut via clipboard (or #h= URL hash)
+  let txt="";
+  try{ txt = await navigator.clipboard.readText(); }
+  catch(e){ toast("Tap Import again and choose 'Allow Paste'"); return; }
+  let h=null;
   try{
-    const txt = await navigator.clipboard.readText();
-    const h = JSON.parse(txt);
-    if(typeof h!=="object") throw 0;
-    applyHealthData(h);
+    h=JSON.parse(txt);
   }catch(e){
-    toast("Run the 'Fuel Import' Shortcut first (see README)");
+    // lenient rescue: pull the numbers out even if the Shortcut's text is malformed
+    const grab=key=>{
+      const m=txt.match(new RegExp('"?'+key+'"?\\s*[:=]\\s*"?\\s*([\\d][\\d.,]*)',"i"));
+      return m?m[1]:null;
+    };
+    h={ steps:grab("steps"), activeKcal:grab("activeKcal"),
+        restingKcal:grab("restingKcal"), weightKg:grab("weightKg") };
   }
+  if(!h || (h.steps==null&&h.activeKcal==null&&h.restingKcal==null&&h.weightKg==null)){
+    toast("Clipboard has no Health data — run 'Fuel Import' Shortcut first");
+    return;
+  }
+  applyHealthData(h);
 }
 // alternative path: Shortcut opens fuel/#h=<urlencoded json>
 (function(){
